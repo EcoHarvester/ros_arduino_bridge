@@ -48,6 +48,9 @@
 #define USE_BASE      // Enable the base controller code
 //#undef USE_BASE     // Disable the base controller code
 
+#define ARDUINO_MEGA_2560
+// #define ARDUINO_UNO_R3
+
 /* Define the motor controller and encoder library you are using */
 #ifdef USE_BASE
    /* The Pololu VNH5019 dual motor driver shield */
@@ -74,6 +77,9 @@
 
 /* Maximum PWM signal */
 #define MAX_PWM        255
+
+/* Motor gear ratio*/
+#define GEAR_RATIO    3840
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
@@ -201,6 +207,11 @@ int runCommand() {
     Serial.print(" ");
     Serial.println(readEncoder(RIGHT));
     break;
+  case READ_REVS:
+    Serial.print(readEncoder(LEFT)/GEAR_RATIO);
+    Serial.print(" ");
+    Serial.println(readEncoder(RIGHT)/GEAR_RATIO);
+    break;
    case RESET_ENCODERS:
     resetEncoders();
     resetPID();
@@ -252,25 +263,47 @@ void setup() {
 // Initialize the motor controller if used */
 #ifdef USE_BASE
   #ifdef ARDUINO_ENC_COUNTER
-    //set as inputs
-    DDRD &= ~(1<<LEFT_ENC_PIN_A);
-    DDRD &= ~(1<<LEFT_ENC_PIN_B);
-    DDRC &= ~(1<<RIGHT_ENC_PIN_A);
-    DDRC &= ~(1<<RIGHT_ENC_PIN_B);
+    #ifdef ARDUINO_MEGA_2560
+      //set as inputs
+      DDRB &= ~(1<<LEFT_ENC_PIN_A);
+      DDRB &= ~(1<<LEFT_ENC_PIN_B);
+      DDRJ &= ~(1<<RIGHT_ENC_PIN_A);
+      DDRJ &= ~(1<<RIGHT_ENC_PIN_B);
+
+      //enable pull up resistors
+      PORTB |= (1<<LEFT_ENC_PIN_A);
+      PORTB |= (1<<LEFT_ENC_PIN_B);
+      PORTJ |= (1<<RIGHT_ENC_PIN_A);
+      PORTJ |= (1<<RIGHT_ENC_PIN_B);
+      
+      // tell pin change mask to listen to left encoder pins
+      PCMSK0 |= (1 << LEFT_ENC_PIN_A)|(1 << LEFT_ENC_PIN_B);
+      // tell pin change mask to listen to right encoder pins
+      PCMSK2 |= (1 << RIGHT_ENC_PIN_A)|(1 << RIGHT_ENC_PIN_B);
     
-    //enable pull up resistors
-    PORTD |= (1<<LEFT_ENC_PIN_A);
-    PORTD |= (1<<LEFT_ENC_PIN_B);
-    PORTC |= (1<<RIGHT_ENC_PIN_A);
-    PORTC |= (1<<RIGHT_ENC_PIN_B);
+      // enable interrupt in the general interrupt mask
+      PCICR |= (1 << PCIE0) | (1 << PCIE2);
+    #elif defined(ARDUINO_UNO)
+      //set as inputs
+      DDRB &= ~(1<<LEFT_ENC_PIN_A);
+      DDRB &= ~(1<<LEFT_ENC_PIN_B);
+      DDRD &= ~(1<<RIGHT_ENC_PIN_A);
+      DDRD &= ~(1<<RIGHT_ENC_PIN_B);
+
+      //enable pull up resistors
+      PORTB |= (1<<LEFT_ENC_PIN_A);
+      PORTB |= (1<<LEFT_ENC_PIN_B);
+      PORTD |= (1<<RIGHT_ENC_PIN_A);
+      PORTD |= (1<<RIGHT_ENC_PIN_B);
+      
+      // tell pin change mask to listen to left encoder pins
+      PCMSK0 |= (1 << LEFT_ENC_PIN_A)|(1 << LEFT_ENC_PIN_B);
+      // tell pin change mask to listen to right encoder pins
+      PCMSK2 |= (1 << RIGHT_ENC_PIN_A)|(1 << RIGHT_ENC_PIN_B);
     
-    // tell pin change mask to listen to left encoder pins
-    PCMSK2 |= (1 << LEFT_ENC_PIN_A)|(1 << LEFT_ENC_PIN_B);
-    // tell pin change mask to listen to right encoder pins
-    PCMSK1 |= (1 << RIGHT_ENC_PIN_A)|(1 << RIGHT_ENC_PIN_B);
-    
-    // enable PCINT1 and PCINT2 interrupt in the general interrupt mask
-    PCICR |= (1 << PCIE1) | (1 << PCIE2);
+      // enable interrupt in the general interrupt mask
+      PCICR |= (1 << PCIE0) | (1 << PCIE2);
+    #endif
   #endif
   initMotorController();
   resetPID();
@@ -355,4 +388,5 @@ void loop() {
   }
 #endif
 }
+
 
