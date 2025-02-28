@@ -78,8 +78,8 @@
 /* Maximum PWM signal */
 #define MAX_PWM        255
 
-/* Motor gear ratio*/
-#define GEAR_RATIO    3840
+/* Count per revolution */
+#define CPR    1320
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
@@ -120,7 +120,7 @@
 
   /* Stop the robot if it hasn't received a movement command
    in this number of milliseconds */
-  #define AUTO_STOP_INTERVAL 2000
+  #define AUTO_STOP_INTERVAL 10000
   long lastMotorCommand = AUTO_STOP_INTERVAL;
 #endif
 
@@ -208,9 +208,9 @@ int runCommand() {
     Serial.println(readEncoder(RIGHT));
     break;
   case READ_REVS:
-    Serial.print(readEncoder(LEFT)/GEAR_RATIO);
+    Serial.print(readEncoder(LEFT)/CPR);
     Serial.print(" ");
-    Serial.println(readEncoder(RIGHT)/GEAR_RATIO);
+    Serial.println(readEncoder(RIGHT)/CPR);
     break;
    case RESET_ENCODERS:
     resetEncoders();
@@ -366,27 +366,26 @@ void loop() {
     }
   }
   
-// If we are using base control, run a PID calculation at the appropriate intervals
-#ifdef USE_BASE
-  if (millis() > nextPID) {
-    updatePID();
-    nextPID += PID_INTERVAL;
-  }
+  // If we are using base control, run a PID calculation at the appropriate intervals
+  #ifdef USE_BASE
+    if (millis() > nextPID) {
+      updatePID();
+      nextPID += PID_INTERVAL;
+    }
+    
+    // Check to see if we have exceeded the auto-stop interval
+    if ((millis() - lastMotorCommand) > AUTO_STOP_INTERVAL) {;
+      setMotorSpeeds(0, 0);
+      moving = 0;
+    }
+  #endif
   
-  // Check to see if we have exceeded the auto-stop interval
-  if ((millis() - lastMotorCommand) > AUTO_STOP_INTERVAL) {;
-    setMotorSpeeds(0, 0);
-    moving = 0;
-  }
-#endif
-
-// Sweep servos
-#ifdef USE_SERVOS
-  int i;
-  for (i = 0; i < N_SERVOS; i++) {
-    servos[i].doSweep();
-  }
-#endif
+  // Sweep servos
+  #ifdef USE_SERVOS
+    int i;
+    for (i = 0; i < N_SERVOS; i++) {
+      servos[i].doSweep();
+    }
+  #endif
 }
-
 
