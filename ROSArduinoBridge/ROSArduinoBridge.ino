@@ -200,6 +200,13 @@ int runCommand() {
     Serial.println(servos[arg1].getServo().read());
     break;
 #endif
+
+  case STEPPER_WRITE:
+    Serial.println("Controlling the stepper")  
+    lastStepTime = millis()
+
+    steppers[1].target_pos = arg1;
+    steppers[2].target_pos = arg2;
     
 #ifdef USE_BASE
   case READ_ENCODERS:

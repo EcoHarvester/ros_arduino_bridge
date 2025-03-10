@@ -17,6 +17,7 @@
 #define RESET_ENCODERS 'r'
 #define SERVO_WRITE    's'
 #define SERVO_READ     't'
+#define STEPPER_WRITE  'st'
 #define UPDATE_PID     'u'
 #define DIGITAL_WRITE  'w'
 #define ANALOG_WRITE   'x'

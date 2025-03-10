@@ -17,8 +17,8 @@
     #define LEFT_ENC_PIN_A PB0  // digital pin 8
     #define LEFT_ENC_PIN_B PB1  // digital pin 9
     
-    #define RIGHT_ENC_PIN_A PD2   // digital pin 2
-    #define RIGHT_ENC_PIN_B PD3   // digital pin 3
+    #define RIGHT_ENC_PIN_A PC4   // analog pin 4
+    #define RIGHT_ENC_PIN_B PC5   // analog pin 5
 
   #endif
 #endif
