@@ -47,6 +47,7 @@ void updateSteppers();
 void processStepperCommand(int argc, char *argv[]);
 
 extern StepperConfig steppers[MAX_STEPPERS];
+extern unsigned long lastStepTime;
 extern volatile bool limit1Triggered;
 extern volatile bool limit2Triggered;
 

@@ -9,6 +9,7 @@ StepperConfig steppers[MAX_STEPPERS] = {
 
 volatile bool limit1Triggered = false;
 volatile bool limit2Triggered = false;
+static bool stepperCalibrated = false;  // Whether both steppers are calibrated decides when to exit calibration
 unsigned long lastStepTime = 0;
 const unsigned long stepDelay = 500; // microseconds between steps
 
@@ -37,73 +38,93 @@ void limit1ISR() { limit1Triggered = true; }
 void limit2ISR() { limit2Triggered = true; }
 
 void calibrateSteppers() {
-  for (int i = 0; i < MAX_STEPPERS; i++) {
-    digitalWrite(steppers[i].enable_pin, LOW); // Enable driver
-    digitalWrite(steppers[i].dir_pin, LOW); // Move towards limit switch
-    steppers[i].state = CALIBRATING;
-  }
-}
+  // Stepper homing loop
+  while (!(stepperCalibrated)) {
+    // Check each stepper
+    for (int i = 0; i < MAX_STEPPERS; i++) {
+      // digitalWrite(steppers[i].enable_pin, LOW); // Enable driver
+      if (!(steppers[i].homed)) {
+        digitalWrite(steppers[i].dir_pin, LOW); // Move towards limit switch
 
-void setStepperPosition(uint8_t stepper_num, float degrees) {
-  if (stepper_num >= MAX_STEPPERS) return;
-  
-  long target_steps = degrees / DEG_PER_STEP;
-  steppers[stepper_num].target_pos = target_steps;
-  
-  digitalWrite(steppers[stepper_num].dir_pin, 
-              target_steps > steppers[stepper_num].current_pos ? HIGH : LOW);
-  
-  steppers[stepper_num].state = MOVING;
-}
+        digitalWrite(steppers[i].step_pin, HIGH);
+        delayMicroseconds(100);
+        digitalWrite(steppers[i].step_pin, LOW);
+        delayMicroseconds(100);
 
-void updateSteppers() {
-  static bool calibrating = true;
-  
-  // Handle calibration first
-  if (calibrating) {
-    if (limit1Triggered && limit2Triggered) {
-      for (int i = 0; i < MAX_STEPPERS; i++) {
-        digitalWrite(steppers[i].enable_pin, HIGH); // Disable driver
-        steppers[i].current_pos = 0;
-        steppers[i].homed = true;
+        steppers[i].state = CALIBRATING;
+      }
+      else {
         steppers[i].state = READY;
       }
-      calibrating = false;
     }
-    return;
+    if (steppers[1].state == READY && steppers[2].state == READY) {
+      stepperCalibrated == true;
+    }
   }
+}
 
-  // Handle normal movement
-  unsigned long currentMicros = micros();
+
+
+// void setStepperPosition(uint8_t stepper_num, float degrees) {
+//   if (stepper_num >= MAX_STEPPERS) return;
   
-  if (currentMicros - lastStepTime >= stepDelay) {
-    for (int i = 0; i < MAX_STEPPERS; i++) {
-      if (steppers[i].state == MOVING) {
-        if (steppers[i].current_pos != steppers[i].target_pos) {
-          digitalWrite(steppers[i].step_pin, HIGH);
-          delayMicroseconds(2);
-          digitalWrite(steppers[i].step_pin, LOW);
+//   long target_steps = degrees / DEG_PER_STEP;
+//   steppers[stepper_num].target_pos = target_steps;
+  
+//   digitalWrite(steppers[stepper_num].dir_pin, 
+//               target_steps > steppers[stepper_num].current_pos ? HIGH : LOW);
+  
+//   steppers[stepper_num].state = MOVING;
+// }
+
+// void updateSteppers() {
+//   static bool calibrating = true;
+  
+//   // Handle calibration first
+//   if (calibrating) {
+//     if (limit1Triggered && limit2Triggered) {
+//       for (int i = 0; i < MAX_STEPPERS; i++) {
+//         digitalWrite(steppers[i].enable_pin, HIGH); // Disable driver
+//         steppers[i].current_pos = 0;
+//         steppers[i].homed = true;
+//         steppers[i].state = READY;
+//       }
+//       calibrating = false;
+//     }
+//     return;
+//   }
+
+//   // Handle normal movement
+//   unsigned long currentMicros = micros();
+  
+//   if (currentMicros - lastStepTime >= stepDelay) {
+//     for (int i = 0; i < MAX_STEPPERS; i++) {
+//       if (steppers[i].state == MOVING) {
+//         if (steppers[i].current_pos != steppers[i].target_pos) {
+//           digitalWrite(steppers[i].step_pin, HIGH);
+//           delayMicroseconds(2);
+//           digitalWrite(steppers[i].step_pin, LOW);
           
-          steppers[i].current_pos += (steppers[i].target_pos > steppers[i].current_pos) ? 1 : -1;
-        } else {
-          steppers[i].state = READY;
-          digitalWrite(steppers[i].enable_pin, HIGH); // Disable after movement
-        }
-      }
-    }
-    lastStepTime = currentMicros;
-  }
-}
+//           steppers[i].current_pos += (steppers[i].target_pos > steppers[i].current_pos) ? 1 : -1;
+//         } else {
+//           steppers[i].state = READY;
+//           digitalWrite(steppers[i].enable_pin, HIGH); // Disable after movement
+//         }
+//       }
+//     }
+//     lastStepTime = currentMicros;
+//   }
+// }
 
-void processStepperCommand(int argc, char *argv[]) {
-  if (argc != 3) return;
+// void processStepperCommand(int argc, char *argv[]) {
+//   if (argc != 3) return;
   
-  float pos1 = atof(argv[1]);
-  float pos2 = atof(argv[2]);
+//   float pos1 = atof(argv[1]);
+//   float pos2 = atof(argv[2]);
   
-  digitalWrite(steppers[0].enable_pin, LOW);
-  digitalWrite(steppers[1].enable_pin, LOW);
+//   digitalWrite(steppers[0].enable_pin, LOW);
+//   digitalWrite(steppers[1].enable_pin, LOW);
   
-  setStepperPosition(0, pos1);
-  setStepperPosition(1, pos2);
-}
+//   setStepperPosition(0, pos1);
+//   setStepperPosition(1, pos2);
+// }

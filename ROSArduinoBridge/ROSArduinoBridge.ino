@@ -124,6 +124,9 @@
   long lastMotorCommand = AUTO_STOP_INTERVAL;
 #endif
 
+// Include the stepper motor and limit switch stuff
+# include "stepper_driver.h"
+
 /* Variable initialization */
 
 // A pair of varibles to help parse serial commands (thanks Fergs)
@@ -202,8 +205,8 @@ int runCommand() {
 #endif
 
   case STEPPER_WRITE:
-    Serial.println("Controlling the stepper")  
-    lastStepTime = millis()
+    Serial.println("Controlling the stepper");
+    lastStepTime = millis();
 
     steppers[1].target_pos = arg1;
     steppers[2].target_pos = arg2;
