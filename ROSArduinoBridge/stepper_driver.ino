@@ -9,6 +9,8 @@ StepperConfig steppers[MAX_STEPPERS] = {
 
 volatile bool limit1Triggered = false;
 volatile bool limit2Triggered = false;
+unsigned long lastTriggerTime_Limit1 = 0;
+unsigned long lastTriggerTime_Limit2 = 0;
 static bool stepperCalibrated = false;  // Whether both steppers are calibrated decides when to exit calibration
 unsigned long lastStepTime = 0;
 const unsigned long stepDelay = 500; // microseconds between steps
@@ -34,29 +36,53 @@ void initSteppers() {
   calibrateSteppers();
 }
 
-void limit1ISR() { limit1Triggered = true; }
-void limit2ISR() { limit2Triggered = true; }
+void limit1ISR() { 
+  limit1Triggered = true; 
+  steppers[1].homed = true;
+}
+void limit2ISR() { 
+  limit2Triggered = true;
+  steppers[2].homed = true;
+}
 
 void calibrateSteppers() {
   // Stepper homing loop
+  Serial.println("Entering stepper calibration");
   while (!(stepperCalibrated)) {
+
+    if (limit1Triggered && millis() - lastTriggerTime_Limit1) {
+      steppers[1].homed = true;
+      lastTriggerTime_Limit1 = millis();
+      limit1Triggered = false;
+    }
+
+    if (limit2Triggered && millis() - lastTriggerTime_Limit2) {
+      steppers[2].homed = true;
+      lastTriggerTime_Limit2 = millis();
+      limit1Triggered = false;
+    }
+
+
     // Check each stepper
     for (int i = 0; i < MAX_STEPPERS; i++) {
       // digitalWrite(steppers[i].enable_pin, LOW); // Enable driver
       if (!(steppers[i].homed)) {
+        // when the steppers are not homed
         digitalWrite(steppers[i].dir_pin, LOW); // Move towards limit switch
 
         digitalWrite(steppers[i].step_pin, HIGH);
-        delayMicroseconds(100);
+        delayMicroseconds(stepDelay);
         digitalWrite(steppers[i].step_pin, LOW);
-        delayMicroseconds(100);
+        delayMicroseconds(stepDelay);
 
         steppers[i].state = CALIBRATING;
       }
       else {
+        // when the steppers are homed
         steppers[i].state = READY;
       }
     }
+
     if (steppers[1].state == READY && steppers[2].state == READY) {
       stepperCalibrated == true;
     }

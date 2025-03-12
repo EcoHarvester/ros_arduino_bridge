@@ -18,8 +18,7 @@
     Software License Agreement (BSD License)
 
     Copyright (c) 2012, Patrick Goebel.
-    All rights reserved.
-
+    All rights reserved.   
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions
     are met:
@@ -48,8 +47,8 @@
 #define USE_BASE      // Enable the base controller code
 //#undef USE_BASE     // Disable the base controller code
 
-#define ARDUINO_MEGA_2560
-// #define ARDUINO_UNO_R3
+// #define ARDUINO_MEGA_2560
+#define ARDUINO_UNO_R3
 
 /* Define the motor controller and encoder library you are using */
 #ifdef USE_BASE
@@ -137,7 +136,7 @@ int index = 0;
 char chr;
 
 // Variable to hold the current single-character command
-char cmd;
+char cmdv[16];
 
 // Character arrays to hold the first and second arguments
 char argv1[16];
@@ -146,10 +145,11 @@ char argv2[16];
 // The arguments converted to integers
 long arg1;
 long arg2;
+long cmd;
 
 /* Clear the current command parameters */
 void resetCommand() {
-  cmd = NULL;
+  cmdv[1] = NULL;
   memset(argv1, 0, sizeof(argv1));
   memset(argv2, 0, sizeof(argv2));
   arg1 = 0;
@@ -166,6 +166,7 @@ int runCommand() {
   int pid_args[4];
   arg1 = atoi(argv1);
   arg2 = atoi(argv2);
+  cmd = atoi(cmdv);
   
   switch(cmd) {
   case GET_BAUDRATE:
@@ -204,13 +205,17 @@ int runCommand() {
     break;
 #endif
 
+  case STEPPER_CALIBRATE:
+    initSteppers();
+    Serial.println("Calibrating the steppers");
+    break;
   case STEPPER_WRITE:
     Serial.println("Controlling the stepper");
     lastStepTime = millis();
 
     steppers[1].target_pos = arg1;
     steppers[2].target_pos = arg2;
-    
+    break;
 #ifdef USE_BASE
   case READ_ENCODERS:
     Serial.print(readEncoder(LEFT));
@@ -269,6 +274,8 @@ int runCommand() {
 /* Setup function--runs once at startup. */
 void setup() {
   Serial.begin(BAUDRATE);
+
+  initSteppers();
 
 // Initialize the motor controller if used */
 #ifdef USE_BASE
@@ -362,7 +369,8 @@ void loop() {
     else {
       if (arg == 0) {
         // The first arg is the single-letter command
-        cmd = chr;
+        // cmdv = chr;
+        if (index < sizeof(cmdv)-1) cmdv[index++] = chr;
       }
       else if (arg == 1) {
         // Subsequent arguments can be more than one character
