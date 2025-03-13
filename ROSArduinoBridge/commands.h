@@ -5,25 +5,38 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
-#define ANALOG_READ    'a'
-#define GET_BAUDRATE   'b'
-#define PIN_MODE       'c'
-#define DIGITAL_READ   'd'
+// #define ANALOG_READ    'a'
+// #define GET_BAUDRATE   'b'
+// #define PIN_MODE       'c'
+// #define DIGITAL_READ   'd'
 #define READ_ENCODERS  'e'
 #define READ_REVS      'f'
 #define MOTOR_SPEEDS   'm'
 #define MOTOR_RAW_PWM  'o'
-#define PING           'p'
+// #define PING           'p'
 #define RESET_ENCODERS 'r'
 #define SERVO_WRITE    's'
 #define SERVO_READ     't'
 #define STEPPER_CALIBRATE 'stc'
 #define STEPPER_WRITE  'stw'
 #define UPDATE_PID     'u'
-#define DIGITAL_WRITE  'w'
-#define ANALOG_WRITE   'x'
+// #define DIGITAL_WRITE  'w'
+// #define ANALOG_WRITE   'x'
 #define LEFT            0
 #define RIGHT           1
+
+#define READ_ENCODERS     "e"
+#define READ_REVS         "rev"
+#define RESET_ENCODERS    "r"
+#define MOTOR_SPEEDS      "m"
+#define MOTOR_RAW_PWM     "o"
+#define SERVO_WRITE
+#define SERVO_READ
+#define STEPPER_CALIBRATE "stc"
+#define STEPPER_WRITE     "stw"
+#define LEFT              0
+#define RIGHT             1
+
 
 #endif
 

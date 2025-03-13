@@ -167,72 +167,25 @@ int runCommand() {
   arg1 = atoi(argv1);
   arg2 = atoi(argv2);
   cmd = atoi(cmdv);
-  
-  switch(cmd) {
-  case GET_BAUDRATE:
-    Serial.println(BAUDRATE);
-    break;
-  case ANALOG_READ:
-    Serial.println(analogRead(arg1));
-    break;
-  case DIGITAL_READ:
-    Serial.println(digitalRead(arg1));
-    break;
-  case ANALOG_WRITE:
-    analogWrite(arg1, arg2);
-    Serial.println("OK"); 
-    break;
-  case DIGITAL_WRITE:
-    if (arg2 == 0) digitalWrite(arg1, LOW);
-    else if (arg2 == 1) digitalWrite(arg1, HIGH);
-    Serial.println("OK"); 
-    break;
-  case PIN_MODE:
-    if (arg2 == 0) pinMode(arg1, INPUT);
-    else if (arg2 == 1) pinMode(arg1, OUTPUT);
-    Serial.println("OK");
-    break;
-  case PING:
-    Serial.println(Ping(arg1));
-    break;
-#ifdef USE_SERVOS
-  case SERVO_WRITE:
-    servos[arg1].setTargetPosition(arg2);
-    Serial.println("OK");
-    break;
-  case SERVO_READ:
-    Serial.println(servos[arg1].getServo().read());
-    break;
-#endif
 
-  case STEPPER_CALIBRATE:
-    initSteppers();
-    Serial.println("Calibrating the steppers");
-    break;
-  case STEPPER_WRITE:
-    Serial.println("Controlling the stepper");
-    lastStepTime = millis();
-
-    steppers[1].target_pos = arg1;
-    steppers[2].target_pos = arg2;
-    break;
 #ifdef USE_BASE
-  case READ_ENCODERS:
+  if (strcmp(cmd, READ_ENCODERS) == 0 ) {
     Serial.print(readEncoder(LEFT));
     Serial.print(" ");
     Serial.println(readEncoder(RIGHT));
-    break;
-  case READ_REVS:
+  }
+  else if (strcmp(cmd, READ_REVS) == 0) {
     Serial.print(readEncoder(LEFT)/CPR);
     Serial.print(" ");
     Serial.println(readEncoder(RIGHT)/CPR);
-    break;
-   case RESET_ENCODERS:
+  }
+
+  else if (strcmp(cmd, RESET_ENCODERS) == 0) {
     resetEncoders();
     resetPID();
     Serial.println("OK");
-    break;
-  case MOTOR_SPEEDS:
+  }
+  else if (strcmp(cmd, MOTOR_SPEEDS) == 0) {
     /* Reset the auto stop timer */
     lastMotorCommand = millis();
     if (arg1 == 0 && arg2 == 0) {
@@ -244,16 +197,16 @@ int runCommand() {
     leftPID.TargetTicksPerFrame = arg1;
     rightPID.TargetTicksPerFrame = arg2;
     Serial.println("OK"); 
-    break;
-  case MOTOR_RAW_PWM:
+  }
+  else if (strcmp(cmd, MOTOR_RAW_PWM) == 0) {
     /* Reset the auto stop timer */
     lastMotorCommand = millis();
     resetPID();
     moving = 0; // Sneaky way to temporarily disable the PID
     setMotorSpeeds(arg1, arg2);
     Serial.println("OK"); 
-    break;
-  case UPDATE_PID:
+  }
+  else if (strcmp(cmd, UPDATE_PID) == 0) {
     while ((str = strtok_r(p, ":", &p)) != '\0') {
        pid_args[i] = atoi(str);
        i++;
@@ -263,12 +216,119 @@ int runCommand() {
     Ki = pid_args[2];
     Ko = pid_args[3];
     Serial.println("OK");
-    break;
-#endif
-  default:
-    Serial.println("Invalid Command");
-    break;
   }
+#endif
+
+  else if (strcmp(cmd, STEPPER_CALIBRATE) == 0) {
+    Serial.println("Calibrating the steppers");
+  }
+  else if (strcmp(cmd, STEPPER_WRITE) == 0) {
+    Serial.println("Actuating the steppers");
+  }
+  else {
+    Serial.println("Invalid command");
+  }
+//   switch(cmd) {
+//   case GET_BAUDRATE:
+//     Serial.println(BAUDRATE);
+//     break;
+//   case ANALOG_READ:
+//     Serial.println(analogRead(arg1));
+//     break;
+//   case DIGITAL_READ:
+//     Serial.println(digitalRead(arg1));
+//     break;
+//   case ANALOG_WRITE:
+//     analogWrite(arg1, arg2);
+//     Serial.println("OK"); 
+//     break;
+//   case DIGITAL_WRITE:
+//     if (arg2 == 0) digitalWrite(arg1, LOW);
+//     else if (arg2 == 1) digitalWrite(arg1, HIGH);
+//     Serial.println("OK"); 
+//     break;
+//   case PIN_MODE:
+//     if (arg2 == 0) pinMode(arg1, INPUT);
+//     else if (arg2 == 1) pinMode(arg1, OUTPUT);
+//     Serial.println("OK");
+//     break;
+//   case PING:
+//     Serial.println(Ping(arg1));
+//     break;
+// #ifdef USE_SERVOS
+//   case SERVO_WRITE:
+//     servos[arg1].setTargetPosition(arg2);
+//     Serial.println("OK");
+//     break;
+//   case SERVO_READ:
+//     Serial.println(servos[arg1].getServo().read());
+//     break;
+// #endif
+
+//   case STEPPER_CALIBRATE:
+//     initSteppers();
+//     Serial.println("Calibrating the steppers");
+//     break;
+//   case STEPPER_WRITE:
+//     Serial.println("Controlling the stepper");
+//     lastStepTime = millis();
+
+//     steppers[1].target_pos = arg1;
+//     steppers[2].target_pos = arg2;
+//     break;
+// #ifdef USE_BASE
+//   case READ_ENCODERS:
+//     Serial.print(readEncoder(LEFT));
+//     Serial.print(" ");
+//     Serial.println(readEncoder(RIGHT));
+//     break;
+//   case READ_REVS:
+//     Serial.print(readEncoder(LEFT)/CPR);
+//     Serial.print(" ");
+//     Serial.println(readEncoder(RIGHT)/CPR);
+//     break;
+//    case RESET_ENCODERS:
+//     resetEncoders();
+//     resetPID();
+//     Serial.println("OK");
+//     break;
+//   case MOTOR_SPEEDS:
+//     /* Reset the auto stop timer */
+//     lastMotorCommand = millis();
+//     if (arg1 == 0 && arg2 == 0) {
+//       setMotorSpeeds(0, 0);
+//       resetPID();
+//       moving = 0;
+//     }
+//     else moving = 1;
+//     leftPID.TargetTicksPerFrame = arg1;
+//     rightPID.TargetTicksPerFrame = arg2;
+//     Serial.println("OK"); 
+//     break;
+//   case MOTOR_RAW_PWM:
+//     /* Reset the auto stop timer */
+//     lastMotorCommand = millis();
+//     resetPID();
+//     moving = 0; // Sneaky way to temporarily disable the PID
+//     setMotorSpeeds(arg1, arg2);
+//     Serial.println("OK"); 
+//     break;
+//   case UPDATE_PID:
+//     while ((str = strtok_r(p, ":", &p)) != '\0') {
+//        pid_args[i] = atoi(str);
+//        i++;
+//     }
+//     Kp = pid_args[0];
+//     Kd = pid_args[1];
+//     Ki = pid_args[2];
+//     Ko = pid_args[3];
+//     Serial.println("OK");
+//     break;
+// #endif
+//   default:
+//     Serial.println("Invalid Command");
+//     break;
+//   }
 }
 
 /* Setup function--runs once at startup. */
@@ -343,8 +403,12 @@ void setup() {
    interval and check for auto-stop conditions.
 */
 void loop() {
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 1000) { // Print once per second
+    Serial.println("Here");
+    lastPrint = millis();
+  }
   while (Serial.available() > 0) {
-    
     // Read the next character
     chr = Serial.read();
 

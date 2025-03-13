@@ -15,6 +15,8 @@ static bool stepperCalibrated = false;  // Whether both steppers are calibrated 
 unsigned long lastStepTime = 0;
 const unsigned long stepDelay = 500; // microseconds between steps
 
+#define DEBOUNCE_DELAY 500
+
 void initSteppers() {
   // Initialize pins
   for (int i = 0; i < MAX_STEPPERS; i++) {
@@ -38,11 +40,9 @@ void initSteppers() {
 
 void limit1ISR() { 
   limit1Triggered = true; 
-  steppers[1].homed = true;
 }
 void limit2ISR() { 
   limit2Triggered = true;
-  steppers[2].homed = true;
 }
 
 void calibrateSteppers() {
@@ -50,16 +50,18 @@ void calibrateSteppers() {
   Serial.println("Entering stepper calibration");
   while (!(stepperCalibrated)) {
 
-    if (limit1Triggered && millis() - lastTriggerTime_Limit1) {
-      steppers[1].homed = true;
+    if (limit1Triggered && !steppers[0].homed && millis() - lastTriggerTime_Limit1 >= DEBOUNCE_DELAY) {
+      steppers[0].homed = true;
       lastTriggerTime_Limit1 = millis();
       limit1Triggered = false;
+      Serial.println("Stepper 1 calibrated");
     }
 
-    if (limit2Triggered && millis() - lastTriggerTime_Limit2) {
-      steppers[2].homed = true;
+    if (limit2Triggered && !steppers[1].homed && millis() - lastTriggerTime_Limit2 >= DEBOUNCE_DELAY) {
+      steppers[1].homed = true;
       lastTriggerTime_Limit2 = millis();
-      limit1Triggered = false;
+      limit2Triggered = false;
+      Serial.println("Stepper 2 calibrated");
     }
 
 
@@ -74,7 +76,6 @@ void calibrateSteppers() {
         delayMicroseconds(stepDelay);
         digitalWrite(steppers[i].step_pin, LOW);
         delayMicroseconds(stepDelay);
-
         steppers[i].state = CALIBRATING;
       }
       else {
@@ -83,10 +84,11 @@ void calibrateSteppers() {
       }
     }
 
-    if (steppers[1].state == READY && steppers[2].state == READY) {
-      stepperCalibrated == true;
+    if (steppers[0].state == READY && steppers[1].state == READY) {
+      stepperCalibrated = true;
     }
   }
+  Serial.println("Stepper calibration finished");
 }
 
 
