@@ -3,7 +3,7 @@
 #define STEPPER_DRIVER_H
 
 // Define stepper parameters
-#define STEPS_PER_REV 200    // 200 steps/rev full stepping
+#define STEPS_PER_REV 400    // 400 steps/rev full stepping
 #define DEG_PER_STEP (360.0/STEPS_PER_REV)
 #define MAX_STEPPERS 2
 
@@ -35,7 +35,9 @@ struct StepperConfig {
   uint8_t limit_switch;
   long current_pos;
   long target_pos;
-  bool homed;
+  bool homed;                 // Is the stepper homed?
+  bool stepState;             // The current state of the step pin
+  long lastStepTime;          // Keep track of the previous moment the step pin was toggled
   StepperState state;
 };
 

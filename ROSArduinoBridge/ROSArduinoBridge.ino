@@ -222,12 +222,24 @@ int runCommand() {
     Serial.println("Calibrating the steppers");
     for (int i = 0; i < MAX_STEPPERS; i++) {
       steppers[i].homed = false;
+      // Serial.println(steppers[i].homed);
     }
     calibrateSteppers();
     
   }
   else if (strcmp(cmd, STEPPER_WRITE) == 0) {
-    Serial.println("Actuating the steppers");
+    Serial.println(arg1);
+    Serial.println(arg2);
+    if (strlen(argv1) > 0 && strlen(argv2) > 0) {
+      Serial.println("Actuating the steppers");
+      setStepperPosition(0, arg1);
+      setStepperPosition(1, arg2);
+      updateSteppers();
+    }
+    else {
+      Serial.println("Invalid command");
+    }
+    
   }
   else {
     Serial.println("Invalid command");
@@ -426,7 +438,11 @@ void loop() {
     // Use spaces to delimit parts of the command
     else if (chr == ' ') {
       // Step through the arguments
-      if (arg == 0) arg = 1;
+      if (arg == 0) {
+        cmd[index] = NULL;
+        arg = 1;
+        index = 0;
+      } 
       else if (arg == 1)  {
         argv1[index] = NULL;
         arg = 2;
