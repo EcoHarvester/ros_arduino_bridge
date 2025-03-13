@@ -136,7 +136,7 @@ int index = 0;
 char chr;
 
 // Variable to hold the current single-character command
-char cmdv[16];
+char cmd[16];
 
 // Character arrays to hold the first and second arguments
 char argv1[16];
@@ -145,11 +145,11 @@ char argv2[16];
 // The arguments converted to integers
 long arg1;
 long arg2;
-long cmd;
+// long cmd;
 
 /* Clear the current command parameters */
 void resetCommand() {
-  cmdv[1] = NULL;
+  cmd[1] = NULL;
   memset(argv1, 0, sizeof(argv1));
   memset(argv2, 0, sizeof(argv2));
   arg1 = 0;
@@ -166,7 +166,6 @@ int runCommand() {
   int pid_args[4];
   arg1 = atoi(argv1);
   arg2 = atoi(argv2);
-  cmd = atoi(cmdv);
 
 #ifdef USE_BASE
   if (strcmp(cmd, READ_ENCODERS) == 0 ) {
@@ -221,6 +220,11 @@ int runCommand() {
 
   else if (strcmp(cmd, STEPPER_CALIBRATE) == 0) {
     Serial.println("Calibrating the steppers");
+    for (int i = 0; i < MAX_STEPPERS; i++) {
+      steppers[i].homed = false;
+    }
+    calibrateSteppers();
+    
   }
   else if (strcmp(cmd, STEPPER_WRITE) == 0) {
     Serial.println("Actuating the steppers");
@@ -404,10 +408,10 @@ void setup() {
 */
 void loop() {
   static unsigned long lastPrint = 0;
-  if (millis() - lastPrint > 1000) { // Print once per second
-    Serial.println("Here");
-    lastPrint = millis();
-  }
+  // if (millis() - lastPrint > 2000) { // Print once every 2 seconds
+  //   Serial.println("Waiting for command");
+  //   lastPrint = millis();
+  // }
   while (Serial.available() > 0) {
     // Read the next character
     chr = Serial.read();
@@ -434,7 +438,7 @@ void loop() {
       if (arg == 0) {
         // The first arg is the single-letter command
         // cmdv = chr;
-        if (index < sizeof(cmdv)-1) cmdv[index++] = chr;
+        if (index < sizeof(cmd)-1) cmd[index++] = chr;
       }
       else if (arg == 1) {
         // Subsequent arguments can be more than one character

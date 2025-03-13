@@ -11,7 +11,7 @@ volatile bool limit1Triggered = false;
 volatile bool limit2Triggered = false;
 unsigned long lastTriggerTime_Limit1 = 0;
 unsigned long lastTriggerTime_Limit2 = 0;
-static bool stepperCalibrated = false;  // Whether both steppers are calibrated decides when to exit calibration
+static bool stepperCalibrated;  // Whether both steppers are calibrated decides when to exit calibration
 unsigned long lastStepTime = 0;
 const unsigned long stepDelay = 500; // microseconds between steps
 
@@ -48,24 +48,29 @@ void limit2ISR() {
 void calibrateSteppers() {
   // Stepper homing loop
   Serial.println("Entering stepper calibration");
+  stepperCalibrated = steppers[0].homed && steppers[1].homed;
   while (!(stepperCalibrated)) {
 
     if (limit1Triggered && !steppers[0].homed && millis() - lastTriggerTime_Limit1 >= DEBOUNCE_DELAY) {
       steppers[0].homed = true;
+      steppers[0].current_pos = 0;
       lastTriggerTime_Limit1 = millis();
       limit1Triggered = false;
+      // Serial.println(limit1Triggered);
       Serial.println("Stepper 1 calibrated");
     }
 
     if (limit2Triggered && !steppers[1].homed && millis() - lastTriggerTime_Limit2 >= DEBOUNCE_DELAY) {
       steppers[1].homed = true;
+      steppers[1].current_pos = 0;
       lastTriggerTime_Limit2 = millis();
       limit2Triggered = false;
+      // Serial.println(limit2Triggered);
       Serial.println("Stepper 2 calibrated");
     }
 
 
-    // Check each stepper
+    // Check each stepper, if not homed then move toward home, else READY
     for (int i = 0; i < MAX_STEPPERS; i++) {
       // digitalWrite(steppers[i].enable_pin, LOW); // Enable driver
       if (!(steppers[i].homed)) {
@@ -84,9 +89,7 @@ void calibrateSteppers() {
       }
     }
 
-    if (steppers[0].state == READY && steppers[1].state == READY) {
-      stepperCalibrated = true;
-    }
+    stepperCalibrated = steppers[0].homed && steppers[1].homed;
   }
   Serial.println("Stepper calibration finished");
 }
