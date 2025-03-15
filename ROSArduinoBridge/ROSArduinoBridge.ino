@@ -47,8 +47,10 @@
 #define USE_BASE      // Enable the base controller code
 //#undef USE_BASE     // Disable the base controller code
 
-// #define ARDUINO_MEGA_2560
-#define ARDUINO_UNO_R3
+#define ARDUINO_MEGA_2560
+// #define ARDUINO_UNO_R3
+
+#define FOUR_MOTORS
 
 /* Define the motor controller and encoder library you are using */
 #ifdef USE_BASE
@@ -141,10 +143,14 @@ char cmd[16];
 // Character arrays to hold the first and second arguments
 char argv1[16];
 char argv2[16];
+char argv3[16];
+char argv4[16];
 
 // The arguments converted to integers
 long arg1;
 long arg2;
+long arg3;
+long arg4;
 // long cmd;
 
 /* Clear the current command parameters */
@@ -154,6 +160,8 @@ void resetCommand() {
   memset(argv2, 0, sizeof(argv2));
   arg1 = 0;
   arg2 = 0;
+  arg3 = 0;
+  arg4 = 0;
   arg = 0;
   index = 0;
 }
@@ -166,17 +174,27 @@ int runCommand() {
   int pid_args[4];
   arg1 = atoi(argv1);
   arg2 = atoi(argv2);
+  arg3 = atoi(argv3);
+  arg4 = atoi(argv4);
 
 #ifdef USE_BASE
   if (strcmp(cmd, READ_ENCODERS) == 0 ) {
-    Serial.print(readEncoder(LEFT));
+    Serial.print(readEncoder(REAR_RIGHT));
     Serial.print(" ");
-    Serial.println(readEncoder(RIGHT));
+    Serial.print(readEncoder(REAR_LEFT));
+    Serial.print(" ");
+    Serial.print(readEncoder(FRONT_LEFT));
+    Serial.print(" ");
+    Serial.println(readEncoder(FRONT_RIGHT));
   }
   else if (strcmp(cmd, READ_REVS) == 0) {
-    Serial.print(readEncoder(LEFT)/CPR);
+    Serial.print(readEncoder(REAR_RIGHT)/CPR);
     Serial.print(" ");
-    Serial.println(readEncoder(RIGHT)/CPR);
+    Serial.print(readEncoder(REAR_LEFT)/CPR);
+    Serial.print(" ");
+    Serial.print(readEncoder(FRONT_LEFT)/CPR);
+    Serial.print(" ");
+    Serial.println(readEncoder(FRONT_RIGHT)/CPR);
   }
 
   else if (strcmp(cmd, RESET_ENCODERS) == 0) {
@@ -187,22 +205,40 @@ int runCommand() {
   else if (strcmp(cmd, MOTOR_SPEEDS) == 0) {
     /* Reset the auto stop timer */
     lastMotorCommand = millis();
-    if (arg1 == 0 && arg2 == 0) {
-      setMotorSpeeds(0, 0);
-      resetPID();
-      moving = 0;
-    }
-    else moving = 1;
-    leftPID.TargetTicksPerFrame = arg1;
-    rightPID.TargetTicksPerFrame = arg2;
-    Serial.println("OK"); 
+    #ifdef TWO_MOTORS
+      if (arg1 == 0 && arg2 == 0) {
+        setMotorSpeeds(0, 0);
+        resetPID();
+        moving = 0;
+      }
+      else moving = 1;
+      rearLeftPID.TargetTicksPerFrame = arg1;   // Using rearLeftPID for left side in two-motor case
+      rearRightPID.TargetTicksPerFrame = arg2;  // using rearRightPID for the right side in two-motor case
+      Serial.println("OK"); 
+    #elif define FOUR_MOTORS
+      if (arg1 == 0 && arg2 == 0 && arg3 == 0 && arg4 == 0) {
+        setMotorSpeeds(0, 0, 0, 0);
+        resetPID();
+        moving = 0;
+      }
+      else moving = 1;
+      frontLeftPID.TargetTicksPerFrame = arg1;
+      frontRightPID.TargetTicksPerFrame = arg2;
+      rearLeftPID.TargetTicksPerFrame = arg1;
+      rearRightPID.TargetTicksPerFrame = arg2;
+      Serial.println("OK"); 
+    #endif
   }
   else if (strcmp(cmd, MOTOR_RAW_PWM) == 0) {
     /* Reset the auto stop timer */
     lastMotorCommand = millis();
     resetPID();
     moving = 0; // Sneaky way to temporarily disable the PID
-    setMotorSpeeds(arg1, arg2);
+    #ifdef TWO_MOTORS
+      setMotorSpeeds(arg1, arg2);
+    #elif define FOUR_MOTORS
+      setMotorSpeeds(arg1, arg2, arg3, arg4)
+    #endif
     Serial.println("OK"); 
   }
   else if (strcmp(cmd, UPDATE_PID) == 0) {
@@ -358,24 +394,30 @@ void setup() {
   #ifdef ARDUINO_ENC_COUNTER
     #ifdef ARDUINO_MEGA_2560
       //set as inputs
-      DDRB &= ~(1<<LEFT_ENC_PIN_A);
-      DDRB &= ~(1<<LEFT_ENC_PIN_B);
-      DDRJ &= ~(1<<RIGHT_ENC_PIN_A);
-      DDRJ &= ~(1<<RIGHT_ENC_PIN_B);
+      DDRB &= ~(1<<REAR_RIGHT_ENC_PIN_A);
+      DDRB &= ~(1<<REAR_RIGHT_ENC_PIN_B);
+      DDRJ &= ~(1<<FRONT_LEFT_ENC_PIN_A);
+      DDRJ &= ~(1<<FRONT_LEFT_ENC_PIN_B);
+      DDRJ &= ~(1<<REAR_LEFT_ENC_PIN_A);
+      DDRJ &= ~(1<<REAR_LEFT_ENC_PIN_B);
+      pinMode(FRONT_RIGHT_ENC_PIN_A, INPUT_PULLUP);
+      pinMode(FRONT_RIGHT_ENC_PIN_B, INPUT_PULLUP);
 
       //enable pull up resistors
-      PORTB |= (1<<LEFT_ENC_PIN_A);
-      PORTB |= (1<<LEFT_ENC_PIN_B);
-      PORTJ |= (1<<RIGHT_ENC_PIN_A);
-      PORTJ |= (1<<RIGHT_ENC_PIN_B);
+      PORTB |= (1<<REAR_RIGHT_ENC_PIN_A);
+      PORTB |= (1<<REAR_RIGHT_ENC_PIN_B);
+      PORTJ |= (1<<FRONT_LEFT_ENC_PIN_A);
+      PORTJ |= (1<<FRONT_LEFT_ENC_PIN_B);
+      PORTK |= (1<<REAR_LEFT_ENC_PIN_A);
+      PORTK |= (1<<REAR_LEFT_ENC_PIN_B);
       
       // tell pin change mask to listen to left encoder pins
-      PCMSK0 |= (1 << LEFT_ENC_PIN_A)|(1 << LEFT_ENC_PIN_B);
-      // tell pin change mask to listen to right encoder pins
-      PCMSK2 |= (1 << RIGHT_ENC_PIN_A)|(1 << RIGHT_ENC_PIN_B);
+      PCMSK0 |= (1 << REAR_RIGHT_ENC_PIN_A)|(1 << REAR_RIGHT_ENC_PIN_B);
+      PCMSK1 |= (1 << FRONT_LEFT_ENC_PIN_A) | (1 << FRONT_LEFT_ENC_PIN_B);
+      PCMSK2 |= (1 << REAR_LEFT_ENC_PIN_A) | (1 << REAR_LEFT_ENC_PIN_B);
     
       // enable interrupt in the general interrupt mask
-      PCICR |= (1 << PCIE0) | (1 << PCIE2);
+      PCICR |= (1 << PCIE0) | (1 << PCIE1) | (1 << PCIE2);
     #elif defined(ARDUINO_UNO)
       //set as inputs
       DDRB &= ~(1<<LEFT_ENC_PIN_A);
@@ -432,9 +474,12 @@ void loop() {
     if (chr == 13) {
       if (arg == 1) argv1[index] = NULL;
       else if (arg == 2) argv2[index] = NULL;
+      else if (arg == 3) argv3[index] = NULL;
+      else if (arg == 4) argv4[index] = NULL;
       runCommand();
       resetCommand();
     }
+    
     // Use spaces to delimit parts of the command
     else if (chr == ' ') {
       // Step through the arguments
@@ -448,8 +493,20 @@ void loop() {
         arg = 2;
         index = 0;
       }
+      else if (arg == 2)  {
+        argv2[index] = NULL;
+        arg = 3;
+        index = 0;
+      }
+      else if (arg == 3)  {
+        argv3[index] = NULL;
+        arg = 4;
+        index = 0;
+      }
       continue;
     }
+
+    // Normal parsing
     else {
       if (arg == 0) {
         // The first arg is the single-letter command
@@ -465,6 +522,14 @@ void loop() {
         argv2[index] = chr;
         index++;
       }
+      else if (arg == 3) {
+        argv3[index] = chr;
+        index++;
+      }
+      else if (arg == 4) {
+        argv4[index] = chr;
+        index++;
+      }
     }
   }
   
@@ -477,7 +542,11 @@ void loop() {
     
     // Check to see if we have exceeded the auto-stop interval
     if ((millis() - lastMotorCommand) > AUTO_STOP_INTERVAL) {;
-      setMotorSpeeds(0, 0);
+      #ifdef TWO_MOTORS
+        setMotorSpeeds(0, 0);
+      #elif define FOUR_MOTORS
+        setMotorSpeeds(0, 0, 0, 0);
+      #endif
       moving = 0;
     }
   #endif

@@ -30,7 +30,8 @@ typedef struct {
 }
 SetPointInfo;
 
-SetPointInfo leftPID, rightPID;
+// TO-DO: Add PID for all four wheels
+SetPointInfo rearRightPID, rearLeftPID, frontLeftPID, frontRightPID;
 
 /* PID Parameters */
 int Kp = 20;
@@ -49,19 +50,34 @@ unsigned char moving = 0; // is the base in motion?
 * when going from stop to moving, that's why we can init everything on zero.
 */
 void resetPID(){
-   leftPID.TargetTicksPerFrame = 0.0;
-   leftPID.Encoder = readEncoder(LEFT);
-   leftPID.PrevEnc = leftPID.Encoder;
-   leftPID.output = 0;
-   leftPID.PrevInput = 0;
-   leftPID.ITerm = 0;
+  rearRightPID.TargetTicksPerFrame = 0.0;
+  rearRightPID.Encoder = readEncoder(REAR_RIGHT);
+  rearRightPID.PrevEnc = rearRightPID.Encoder;
+  rearRightPID.output = 0;
+  rearRightPID.PrevInput = 0;
+  rearRightPID.ITerm = 0;
 
-   rightPID.TargetTicksPerFrame = 0.0;
-   rightPID.Encoder = readEncoder(RIGHT);
-   rightPID.PrevEnc = rightPID.Encoder;
-   rightPID.output = 0;
-   rightPID.PrevInput = 0;
-   rightPID.ITerm = 0;
+  rearLeftPID.TargetTicksPerFrame = 0.0;
+  rearLeftPID.Encoder = readEncoder(REAR_LEFT);
+  rearLeftPID.PrevEnc = rearLeftPID.Encoder;
+  rearLeftPID.output = 0;
+  rearLeftPID.PrevInput = 0;
+  rearLeftPID.ITerm = 0;
+
+  frontLeftPID.TargetTicksPerFrame = 0.0;
+  frontLeftPID.Encoder = readEncoder(FRONT_RIGHT);
+  frontLeftPID.PrevEnc = frontLeftPID.Encoder;
+  frontLeftPID.output = 0;
+  frontLeftPID.PrevInput = 0;
+  frontLeftPID.ITerm = 0;
+
+  frontRightPID.TargetTicksPerFrame = 0.0;
+  frontRightPID.Encoder = readEncoder(FRONT_RIGHT);
+  frontRightPID.PrevEnc = frontRightPID.Encoder;
+  frontRightPID.output = 0;
+  frontRightPID.PrevInput = 0;
+  frontRightPID.ITerm = 0;
+
 }
 
 /* PID routine to compute the next motor commands */
@@ -105,8 +121,10 @@ void doPID(SetPointInfo * p) {
 /* Read the encoder values and call the PID routine */
 void updatePID() {
   /* Read the encoders */
-  leftPID.Encoder = readEncoder(LEFT);
-  rightPID.Encoder = readEncoder(RIGHT);
+  rearRightPID.Encoder = readEncoder(REAR_RIGHT);
+  rearLeftPID.Encoder = readEncoder(REAR_LEFT);
+  frontLeftPID.Encoder = readEncoder(FRONT_LEFT);
+  frontRightPID.Encoder = readEncoder(FRONT_RIGHT);
   
   /* If we're not moving there is nothing more to do */
   if (!moving){
@@ -116,15 +134,21 @@ void updatePID() {
     * PrevInput is considered a good proxy to detect
     * whether reset has already happened
     */
-    if (leftPID.PrevInput != 0 || rightPID.PrevInput != 0) resetPID();
+    if (rearRightPID.PrevInput != 0 || rearLeftPID.PrevInput != 0 || frontLeftPID.PrevInput != 0 || frontRightPID.PrevInput != 0) resetPID();
     return;
   }
 
   /* Compute PID update for each motor */
-  doPID(&rightPID);
-  doPID(&leftPID);
+  doPID(&rearRightPID);
+  doPID(&rearLeftPID);
+  doPID(&frontLeftPID);
+  doPID(&frontRightPID);
 
   /* Set the motor speeds accordingly */
-  setMotorSpeeds(leftPID.output, rightPID.output);
+  #ifdef TWO_MOTORS
+    setMotorSpeeds(rearLeftPID.output, rearRightPID.output);
+  #elif define FOUR_MOTORS
+    setMotorSpeeds(frontLeftPID.output, frontRightPID.output, rearLeftPID.output, rearRightPID.output)
+  #endif
 }
 

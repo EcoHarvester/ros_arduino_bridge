@@ -28,30 +28,63 @@
     else return encoders.XAxisReset();
   }
 #elif defined(ARDUINO_ENC_COUNTER)
-  volatile long left_enc_pos = 0L;
-  volatile long right_enc_pos = 0L;
+  // volatile long left_enc_pos = 0L;
+  // volatile long right_enc_pos = 0L;
+  
+  volatile long rear_right_enc_pos = 0L;
+  volatile long rear_left_enc_pos = 0L;
+  volatile long front_left_enc_pos = 0L;
+  volatile long front_right_enc_pos = 0L;
+  
   static const int8_t ENC_STATES [] = {0,1,-1,0,-1,0,0,1,1,0,0,-1,0,-1,1,0};  //encoder lookup table
 
   /* Arduino MEGA2560 encoder interrupts */
   #ifdef ARDUINO_MEGA_2560
     /* Interrupt routine for LEFT encoder, taking care of actual counting */
-    ISR (PCINT0_vect){    // Interrupt on port B
+    ISR (REAR_RIGHT_ENC_PCINT_VECT){    // Interrupt on port B
       static uint8_t enc_last=0;
           
       enc_last <<=2; //shift previous state two places
-      enc_last |= PINB & 0x03; //read the current state into lowest 2 bits
-    
-      left_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+      // enc_last |= PINB & 0x03; //read the current state into lowest 2 bits
+      enc_last |= PINB & ((1 << REAR_RIGHT_ENC_PIN_A) | (1 << REAR_RIGHT_ENC_PIN_B));
+      rear_right_enc_pos += ENC_STATES[(enc_last & 0x0f)];
     }
     
     /* Interrupt routine for RIGHT encoder, taking care of actual counting */
-    ISR (PCINT2_vect){  // Interrupt on port K
+    ISR (REAR_LEFT_ENC_PCINT_VECT){  // Interrupt on port K
       static uint8_t enc_last=0;
               
       enc_last <<=2; //shift previous state two places
-      enc_last |= PINK & 0x03; //read the current state into lowest 2 bits
+      enc_last |= PINK & ((1 << REAR_LEFT_ENC_PIN_A) | (1 << REAR_LEFT_ENC_PIN_B)); //read the current state into lowest 2 bits
     
-      right_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+      rear_left_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+    }
+
+    ISR (FRONT_LEFT_ENC_PCINT_VECT) {  // Interrupt on port J
+      static uint8_t enc_last=0;
+              
+      enc_last <<=2; //shift previous state two places
+      enc_last |= PINJ & ((1 << FRONT_LEFT_ENC_PIN_A) | (1 << FRONT_LEFT_ENC_PIN_B)); //read the current state into lowest 2 bits
+    
+      front_left_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+    }
+
+    void frontRightEncA() {
+      // Determine direction by checking Encoder B
+      if (digitalRead(FRONT_RIGHT_ENC_PIN_A) == digitalRead(FRONT_RIGHT_ENC_PIN_B)) {
+          front_right_enc_pos++;  // Forward
+      } else {
+          front_right_enc_pos--;  // Backward
+      }
+    }
+
+    void frontRightEncB() {
+      // Determine direction by checking Encoder A
+      if (digitalRead(FRONT_RIGHT_ENC_PIN_A) == digitalRead(FRONT_RIGHT_ENC_PIN_B)) {
+          front_right_enc_pos--;  // Backward
+      } else {
+          front_right_enc_pos++;  // Forward
+      }
     }
   
   #elif defined(ARDUINO_UNO)
@@ -79,18 +112,27 @@
   
   /* Wrap the encoder reading function */
   long readEncoder(int i) {
-    if (i == LEFT) return left_enc_pos;
-    else return right_enc_pos;
+    if (i == REAR_RIGHT) return rear_right_enc_pos;
+    else if (i == REAR_LEFT) return rear_left_enc_pos;
+    else if (i == FRONT_LEFT) return front_left_enc_pos;
+    else return front_right_enc_pos;
   }
 
   /* Wrap the encoder reset function */
   void resetEncoder(int i) {
-    if (i == LEFT){
-      left_enc_pos=0L;
+    if (i == REAR_RIGHT){
+      rear_right_enc_pos = 0L;
       return;
-    } else { 
-      right_enc_pos=0L;
+    } 
+    else if (i == REAR_LEFT) { 
+      rear_left_enc_pos = 0L;
       return;
+    }
+    else if (i == FRONT_LEFT) {
+      front_left_enc_pos = 0L;      
+    }
+    else {
+      front_right_enc_pos = 0L;
     }
   }
 #else
@@ -99,8 +141,10 @@
 
 /* Wrap the encoder reset function */
 void resetEncoders() {
-  resetEncoder(LEFT);
-  resetEncoder(RIGHT);
+  resetEncoder(REAR_RIGHT);
+  resetEncoder(REAR_LEFT);
+  resetEncoder(FRONT_LEFT);
+  resetEncoder(FRONT_RIGHT);
 }
 
 #endif
