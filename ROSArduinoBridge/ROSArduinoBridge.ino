@@ -50,7 +50,8 @@
 #define ARDUINO_MEGA_2560
 // #define ARDUINO_UNO_R3
 
-#define FOUR_MOTORS
+#define TWO_MOTORS
+// #define FOUR_MOTORS
 
 /* Define the motor controller and encoder library you are using */
 #ifdef USE_BASE
