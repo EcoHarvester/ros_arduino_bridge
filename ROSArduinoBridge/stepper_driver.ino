@@ -46,8 +46,9 @@ void limit2ISR() {
 
 void calibrateSteppers() {
   // Stepper homing loop
-  Serial.println("Entering stepper calibration");
+  Serial.println("Calibrating the steppers");
   stepperCalibrated = steppers[0].homed && steppers[1].homed;
+  Serial.println("Here");
   while (!(stepperCalibrated)) {
     // Serial.println("Stepper 1");
     // Serial.println(limit1Triggered);

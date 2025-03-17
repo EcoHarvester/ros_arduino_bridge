@@ -30,13 +30,13 @@
 
     #define FRONT_RIGHT_ENC_PIN_A   18
     #define FRONT_RIGHT_ENC_PIN_B   19  
-  #elif defined(ARDUINO_UNO)
+  #elif defined(ARDUINO_UNO_R3)
     // Using pin 0 and 1 on port B for left encoder reading (PCINT0 and PCINT1 on PCMSK0)
-    // #define LEFT_ENC_PIN_A PB0  // digital pin 8
-    // #define LEFT_ENC_PIN_B PB1  // digital pin 9
+    #define LEFT_ENC_PIN_A PB0  // digital pin 8
+    #define LEFT_ENC_PIN_B PB1  // digital pin 9
     
-    // #define RIGHT_ENC_PIN_A PC4   // analog pin 4
-    // #define RIGHT_ENC_PIN_B PC5   // analog pin 5
+    #define RIGHT_ENC_PIN_A PC4   // analog pin 4
+    #define RIGHT_ENC_PIN_B PC5   // analog pin 5
 
   #endif
 #endif

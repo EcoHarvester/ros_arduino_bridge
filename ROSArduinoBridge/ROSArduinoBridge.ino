@@ -122,7 +122,7 @@
 
   /* Stop the robot if it hasn't received a movement command
    in this number of milliseconds */
-  #define AUTO_STOP_INTERVAL 10000
+  #define AUTO_STOP_INTERVAL 2000
   long lastMotorCommand = AUTO_STOP_INTERVAL;
 #endif
 
@@ -156,9 +156,11 @@ long arg4;
 
 /* Clear the current command parameters */
 void resetCommand() {
-  cmd[1] = NULL;
+  memset(cmd, 0, sizeof(cmd));
   memset(argv1, 0, sizeof(argv1));
   memset(argv2, 0, sizeof(argv2));
+  memset(argv3, 0, sizeof(argv3));
+  memset(argv4, 0, sizeof(argv4));
   arg1 = 0;
   arg2 = 0;
   arg3 = 0;
@@ -387,65 +389,65 @@ int runCommand() {
 /* Setup function--runs once at startup. */
 void setup() {
   Serial.begin(BAUDRATE);
+  delay(2000);
 
-  initSteppers();
+  // Initialize the motor controller if used */
+  #ifdef USE_BASE
+    #ifdef ARDUINO_ENC_COUNTER
+      #ifdef ARDUINO_MEGA_2560
+        //set as inputs
+        DDRB &= ~(1<<REAR_RIGHT_ENC_PIN_A);
+        DDRB &= ~(1<<REAR_RIGHT_ENC_PIN_B);
+        DDRJ &= ~(1<<FRONT_LEFT_ENC_PIN_A);
+        DDRJ &= ~(1<<FRONT_LEFT_ENC_PIN_B);
+        DDRK &= ~(1<<REAR_LEFT_ENC_PIN_A);
+        DDRK &= ~(1<<REAR_LEFT_ENC_PIN_B);
+        pinMode(FRONT_RIGHT_ENC_PIN_A, INPUT_PULLUP);
+        pinMode(FRONT_RIGHT_ENC_PIN_B, INPUT_PULLUP);
 
-// Initialize the motor controller if used */
-#ifdef USE_BASE
-  #ifdef ARDUINO_ENC_COUNTER
-    #ifdef ARDUINO_MEGA_2560
-      //set as inputs
-      DDRB &= ~(1<<REAR_RIGHT_ENC_PIN_A);
-      DDRB &= ~(1<<REAR_RIGHT_ENC_PIN_B);
-      DDRJ &= ~(1<<FRONT_LEFT_ENC_PIN_A);
-      DDRJ &= ~(1<<FRONT_LEFT_ENC_PIN_B);
-      DDRJ &= ~(1<<REAR_LEFT_ENC_PIN_A);
-      DDRJ &= ~(1<<REAR_LEFT_ENC_PIN_B);
-      pinMode(FRONT_RIGHT_ENC_PIN_A, INPUT_PULLUP);
-      pinMode(FRONT_RIGHT_ENC_PIN_B, INPUT_PULLUP);
-
-      //enable pull up resistors
-      PORTB |= (1<<REAR_RIGHT_ENC_PIN_A);
-      PORTB |= (1<<REAR_RIGHT_ENC_PIN_B);
-      PORTJ |= (1<<FRONT_LEFT_ENC_PIN_A);
-      PORTJ |= (1<<FRONT_LEFT_ENC_PIN_B);
-      PORTK |= (1<<REAR_LEFT_ENC_PIN_A);
-      PORTK |= (1<<REAR_LEFT_ENC_PIN_B);
+        //enable pull up resistors
+        PORTB |= (1<<REAR_RIGHT_ENC_PIN_A);
+        PORTB |= (1<<REAR_RIGHT_ENC_PIN_B);
+        PORTJ |= (1<<FRONT_LEFT_ENC_PIN_A);
+        PORTJ |= (1<<FRONT_LEFT_ENC_PIN_B);
+        PORTK |= (1<<REAR_LEFT_ENC_PIN_A);
+        PORTK |= (1<<REAR_LEFT_ENC_PIN_B);
+        
+        // tell pin change mask to listen to left encoder pins
+        PCMSK0 |= (1 << REAR_RIGHT_ENC_PIN_A) | (1 << REAR_RIGHT_ENC_PIN_B);
+        PCMSK1 |= (1 << FRONT_LEFT_ENC_PIN_A) | (1 << FRONT_LEFT_ENC_PIN_B);
+        PCMSK2 |= (1 << REAR_LEFT_ENC_PIN_A) | (1 << REAR_LEFT_ENC_PIN_B);
       
-      // tell pin change mask to listen to left encoder pins
-      PCMSK0 |= (1 << REAR_RIGHT_ENC_PIN_A)|(1 << REAR_RIGHT_ENC_PIN_B);
-      PCMSK1 |= (1 << FRONT_LEFT_ENC_PIN_A) | (1 << FRONT_LEFT_ENC_PIN_B);
-      PCMSK2 |= (1 << REAR_LEFT_ENC_PIN_A) | (1 << REAR_LEFT_ENC_PIN_B);
-    
-      // enable interrupt in the general interrupt mask
-      PCICR |= (1 << PCIE0) | (1 << PCIE1) | (1 << PCIE2);
-    #elif defined(ARDUINO_UNO)
-      //set as inputs
-      DDRB &= ~(1<<LEFT_ENC_PIN_A);
-      DDRB &= ~(1<<LEFT_ENC_PIN_B);
-      DDRD &= ~(1<<RIGHT_ENC_PIN_A);
-      DDRD &= ~(1<<RIGHT_ENC_PIN_B);
+        // enable interrupt in the general interrupt mask
+        PCICR |= (1 << PCIE0) | (1 << PCIE1) | (1 << PCIE2);
+      #elif defined ARDUINO_UNO_R3
+        //set as inputs
+        DDRB &= ~(1<<LEFT_ENC_PIN_A);
+        DDRB &= ~(1<<LEFT_ENC_PIN_B);
+        DDRD &= ~(1<<RIGHT_ENC_PIN_A);
+        DDRD &= ~(1<<RIGHT_ENC_PIN_B);
 
-      //enable pull up resistors
-      PORTB |= (1<<LEFT_ENC_PIN_A);
-      PORTB |= (1<<LEFT_ENC_PIN_B);
-      PORTD |= (1<<RIGHT_ENC_PIN_A);
-      PORTD |= (1<<RIGHT_ENC_PIN_B);
+        //enable pull up resistors
+        PORTB |= (1<<LEFT_ENC_PIN_A);
+        PORTB |= (1<<LEFT_ENC_PIN_B);
+        PORTD |= (1<<RIGHT_ENC_PIN_A);
+        PORTD |= (1<<RIGHT_ENC_PIN_B);
+        
+        // tell pin change mask to listen to left encoder pins
+        PCMSK0 |= (1 << LEFT_ENC_PIN_A)|(1 << LEFT_ENC_PIN_B);
+        // tell pin change mask to listen to right encoder pins
+        PCMSK2 |= (1 << RIGHT_ENC_PIN_A)|(1 << RIGHT_ENC_PIN_B);
       
-      // tell pin change mask to listen to left encoder pins
-      PCMSK0 |= (1 << LEFT_ENC_PIN_A)|(1 << LEFT_ENC_PIN_B);
-      // tell pin change mask to listen to right encoder pins
-      PCMSK2 |= (1 << RIGHT_ENC_PIN_A)|(1 << RIGHT_ENC_PIN_B);
-    
-      // enable interrupt in the general interrupt mask
-      PCICR |= (1 << PCIE0) | (1 << PCIE2);
+        // enable interrupt in the general interrupt mask
+        PCICR |= (1 << PCIE0) | (1 << PCIE2);
+      #endif
     #endif
+    initSteppers();
+    initMotorController();
+    resetPID();
   #endif
-  initMotorController();
-  resetPID();
-#endif
 
-/* Attach servos if used */
+  /* Attach servos if used */
   #ifdef USE_SERVOS
     int i;
     for (i = 0; i < N_SERVOS; i++) {
@@ -473,10 +475,21 @@ void loop() {
 
     // Terminate a command with a CR
     if (chr == 13) {
-      if (arg == 1) argv1[index] = NULL;
-      else if (arg == 2) argv2[index] = NULL;
-      else if (arg == 3) argv3[index] = NULL;
-      else if (arg == 4) argv4[index] = NULL;
+      if (arg == 0) cmd[index] = '\0';
+      else if (arg == 1) argv1[index] = '\0';
+      else if (arg == 2) argv2[index] = '\0';
+      else if (arg == 3) argv3[index] = '\0';
+      else if (arg == 4) argv4[index] = '\0';
+      Serial.print(cmd);
+      Serial.print(" | ");
+      Serial.print(arg1);
+      Serial.print(" | ");
+      Serial.print(arg2);
+      Serial.print(" | ");
+      Serial.print(arg3);
+      Serial.print(" | ");
+      Serial.print(arg4);
+      Serial.print(" | ");
       runCommand();
       resetCommand();
     }
@@ -485,22 +498,22 @@ void loop() {
     else if (chr == ' ') {
       // Step through the arguments
       if (arg == 0) {
-        cmd[index] = NULL;
+        cmd[index] = '\0';
         arg = 1;
         index = 0;
       } 
       else if (arg == 1)  {
-        argv1[index] = NULL;
+        argv1[index] = '\0';
         arg = 2;
         index = 0;
       }
       else if (arg == 2)  {
-        argv2[index] = NULL;
+        argv2[index] = '\0';
         arg = 3;
         index = 0;
       }
       else if (arg == 3)  {
-        argv3[index] = NULL;
+        argv3[index] = '\0';
         arg = 4;
         index = 0;
       }

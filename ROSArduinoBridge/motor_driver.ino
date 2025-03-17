@@ -32,7 +32,7 @@
     setMotorSpeed(REAR_LEFT, leftSpeed);
     setMotorSpeed(REAR_RIGHT, rightSpeed);
   }
-#elif defined POLOLU_MC33926
+#elif defined(POLOLU_MC33926)
   /* Include the Pololu library */
   #include "DualMC33926MotorShield.h"
 
@@ -55,7 +55,7 @@
     setMotorSpeed(REAR_LEFT, leftSpeed);
     setMotorSpeed(REAR_RIGHT, rightSpeed);
   }
-#elif defined L298_MOTOR_DRIVER
+#elif defined(L298_MOTOR_DRIVER)
   #ifdef TWO_MOTORS
     void initMotorController() {
       digitalWrite(REAR_RIGHT_MOTOR_ENABLE, HIGH);

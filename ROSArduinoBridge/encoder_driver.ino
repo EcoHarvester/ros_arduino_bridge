@@ -87,7 +87,7 @@
       }
     }
   
-  #elif defined(ARDUINO_UNO)
+  #elif defined(ARDUINO_UNO_R3)
     /* Interrupt routine for LEFT encoder, taking care of actual counting */
       ISR (PCINT0_vect){    // Interrupt on port B
         static uint8_t enc_last=0;
@@ -95,17 +95,17 @@
         enc_last <<=2; //shift previous state two places
         enc_last |= PINB & 0x03; //read the current state into lowest 2 bits
       
-        left_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+        rear_left_enc_pos += ENC_STATES[(enc_last & 0x0f)];
       }
       
       /* Interrupt routine for RIGHT encoder, taking care of actual counting */
       ISR (PCINT2_vect){    // Interrupt on port D
         static uint8_t enc_last=0;
                 
-        enc_last <<=2; //shift previous state two places
+        enc_last <<=2; //shift previous state  two places
         enc_last |= (PIND & (3 << 2)) >> 2; //read the current state into lowest 2 bits
       
-        right_enc_pos += ENC_STATES[(enc_last & 0x0f)];
+        rear_right_enc_pos += ENC_STATES[(enc_last & 0x0f)];
       }
 
   #endif
