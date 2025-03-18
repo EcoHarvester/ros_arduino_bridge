@@ -55,7 +55,7 @@ void
 calibrateSteppers ()
 {
     // Stepper homing loop
-  Serial.println("Calibrating the steppers");
+    Serial.println ("Calibrating the steppers");
     while (!(steppers[0].homed && steppers[1].homed))
     {
         // Serial.println("Stepper 1");
@@ -130,7 +130,8 @@ setStepperPosition (uint8_t stepper_num, float degrees)
     steppers[stepper_num].target_pos = degrees / DEG_PER_STEP;
 
     // Adjust the direction according to the desired step position
-    bool direction = steppers[stepper_num].target_pos > steppers[stepper_num].current_pos ? HIGH : LOW;
+    bool direction
+        = steppers[stepper_num].target_pos > steppers[stepper_num].current_pos ? HIGH : LOW;
     digitalWrite (steppers[stepper_num].dir_pin, direction);
 
     steppers[stepper_num].state = MOVING;

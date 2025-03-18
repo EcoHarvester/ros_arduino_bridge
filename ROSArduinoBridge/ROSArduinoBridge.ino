@@ -122,7 +122,7 @@ unsigned long nextPID = PID_INTERVAL;
 
 /* Stop the robot if it hasn't received a movement command
  in this number of milliseconds */
-  #define AUTO_STOP_INTERVAL 2000
+#define AUTO_STOP_INTERVAL 2000
 long lastMotorCommand = AUTO_STOP_INTERVAL;
 #endif
 
@@ -158,11 +158,11 @@ long arg4;
 void
 resetCommand ()
 {
-memset(cmd, 0, sizeof(cmd));
+    memset (cmd, 0, sizeof (cmd));
     memset (argv1, 0, sizeof (argv1));
     memset (argv2, 0, sizeof (argv2));
-  memset(argv3, 0, sizeof(argv3));
-  memset(argv4, 0, sizeof(argv4));
+    memset (argv3, 0, sizeof (argv3));
+    memset (argv4, 0, sizeof (argv4));
     arg1 = 0;
     arg2 = 0;
     arg3 = 0;
@@ -328,23 +328,22 @@ void
 setup ()
 {
     Serial.begin (BAUDRATE);
-  Serial.println("Setting things up");
-  delay(1000);
+    Serial.println ("Setting things up");
+    delay (1000);
 
-  // Initialize the motor controller if used */
-  #ifdef USE_BASE
-    #ifdef ARDUINO_ENC_COUNTER
-      #ifdef ARDUINO_MEGA_2560
-        //set as inputs
-        DDRB &= ~(1<<REAR_RIGHT_ENC_PIN_A);
-        DDRB &= ~(1<<REAR_RIGHT_ENC_PIN_B);
-        DDRJ &= ~(1<<FRONT_LEFT_ENC_PIN_A);
-        DDRJ &= ~(1<<FRONT_LEFT_ENC_PIN_B);
-        DDRK &= ~(1<<REAR_LEFT_ENC_PIN_A);
-        DDRK &= ~(1<<REAR_LEFT_ENC_PIN_B);
+// Initialize the motor controller if used */
+#if defined(USE_BASE) && defined(ARDUINO_ENC_COUNTER)
+#if defined(ARDUINO_MEGA_2560)
+    // set as inputs
+    DDRB &= ~(1 << REAR_RIGHT_ENC_PIN_A);
+    DDRB &= ~(1 << REAR_RIGHT_ENC_PIN_B);
+    DDRJ &= ~(1 << FRONT_LEFT_ENC_PIN_A);
+    DDRJ &= ~(1 << FRONT_LEFT_ENC_PIN_B);
+    DDRK &= ~(1 << REAR_LEFT_ENC_PIN_A);
+    DDRK &= ~(1 << REAR_LEFT_ENC_PIN_B);
     pinMode (FRONT_RIGHT_ENC_PIN_A, INPUT_PULLUP);
     pinMode (FRONT_RIGHT_ENC_PIN_B, INPUT_PULLUP);
-        
+
     // enable pull up resistors
     PORTB |= (1 << REAR_RIGHT_ENC_PIN_A);
     PORTB |= (1 << REAR_RIGHT_ENC_PIN_B);
@@ -353,23 +352,23 @@ setup ()
     PORTK |= (1 << REAR_LEFT_ENC_PIN_A);
     PORTK |= (1 << REAR_LEFT_ENC_PIN_B);
 
-        // NOTE:
-        // To use the PCINT pins on port J, we must
-        // disable the hardware UART TX3 and RX3 pins.
-        UCSR3B &= ~(_BV(TXEN3)); //disable UART TX
-        UCSR3B &= ~(_BV(RXEN3)); //disable UART RX
-        UCSR3B &= ~(_BV(TXCIE3)); //disable UART TX Interrupt
-        UCSR3B &= ~(_BV(RXCIE3)); //disable UART RX Interrupt
+    // NOTE:
+    // To use the PCINT pins on port J, we must
+    // disable the hardware UART TX3 and RX3 pins.
+    UCSR3B &= ~(_BV (TXEN3));  // disable UART TX
+    UCSR3B &= ~(_BV (RXEN3));  // disable UART RX
+    UCSR3B &= ~(_BV (TXCIE3)); // disable UART TX Interrupt
+    UCSR3B &= ~(_BV (RXCIE3)); // disable UART RX Interrupt
 
-        PCICR |= (1 << PCIE0);
-        PCICR |= (1 << PCIE1);
-        PCICR |= (1 << PCIE2);
-        
+    PCICR |= (1 << PCIE0);
+    PCICR |= (1 << PCIE1);
+    PCICR |= (1 << PCIE2);
+
     // tell pin change mask to listen to left encoder pins
     PCMSK0 |= (1 << REAR_RIGHT_ENC_PIN_A) | (1 << REAR_RIGHT_ENC_PIN_B);
     PCMSK1 |= (1 << FRONT_LEFT_ENC_PIN_A) | (1 << FRONT_LEFT_ENC_PIN_B);
     PCMSK2 |= (1 << REAR_LEFT_ENC_PIN_A) | (1 << REAR_LEFT_ENC_PIN_B);
-      #elif defined ARDUINO_UNO_R3
+#elif defined ARDUINO_UNO_R3
     // set as inputs
     DDRB &= ~(1 << LEFT_ENC_PIN_A);
     DDRB &= ~(1 << LEFT_ENC_PIN_B);
@@ -390,13 +389,12 @@ setup ()
     // enable interrupt in the general interrupt mask
     PCICR |= (1 << PCIE0) | (1 << PCIE2);
 #endif
+    initSteppers ();
+    initMotorController ();
+    resetPID ();
 #endif
-    initSteppers();
-    initMotorController();
-    resetPID();
-  #endif
 
-  /* Attach servos if used */
+    /* Attach servos if used */
 #ifdef USE_SERVOS
     int i;
     for (i = 0; i < N_SERVOS; i++)
@@ -424,22 +422,28 @@ loop ()
         chr = Serial.read ();
 
         // Terminate a command with a CR
-        if (chr == 13){
-      if (arg == 0) cmd[index] = '\0';
-      else if (arg == 1) argv1[index] = '\0';
-      else if (arg == 2) argv2[index] = '\0';
-      else if (arg == 3) argv3[index] = '\0';
-      else if (arg == 4) argv4[index] = '\0';
-      Serial.print(cmd);
-      Serial.print(" | ");
-      Serial.print(argv1);
-      Serial.print(" | ");
-      Serial.print(argv2);
-      Serial.print(" | ");
-      Serial.print(argv3);
-      Serial.print(" | ");
-      Serial.print(argv4);
-      Serial.print(" | ");
+        if (chr == 13)
+        {
+            if (arg == 0)
+                cmd[index] = '\0';
+            else if (arg == 1)
+                argv1[index] = '\0';
+            else if (arg == 2)
+                argv2[index] = '\0';
+            else if (arg == 3)
+                argv3[index] = '\0';
+            else if (arg == 4)
+                argv4[index] = '\0';
+            Serial.print (cmd);
+            Serial.print (" | ");
+            Serial.print (argv1);
+            Serial.print (" | ");
+            Serial.print (argv2);
+            Serial.print (" | ");
+            Serial.print (argv3);
+            Serial.print (" | ");
+            Serial.print (argv4);
+            Serial.print (" | ");
             runCommand ();
             resetCommand ();
         }
@@ -448,23 +452,27 @@ loop ()
         else if (chr == ' ')
         {
             // Step through the arguments
-            if (arg == 0){
-        cmd[index] = '\0';
+            if (arg == 0)
+            {
+                cmd[index] = '\0';
                 arg = 1;
                 index = 0;
             }
-            else if (arg == 1){
-        argv1[index] = '\0';
+            else if (arg == 1)
+            {
+                argv1[index] = '\0';
                 arg = 2;
                 index = 0;
             }
-            else if (arg == 2){
-        argv2[index] = '\0';
+            else if (arg == 2)
+            {
+                argv2[index] = '\0';
                 arg = 3;
                 index = 0;
             }
-            else if (arg == 3){
-        argv3[index] = '\0';
+            else if (arg == 3)
+            {
+                argv3[index] = '\0';
                 arg = 4;
                 index = 0;
             }
@@ -478,9 +486,10 @@ loop ()
             {
                 // The first arg is the single-letter command
                 // cmdv = chr;
-        if (index < sizeof(cmd)-1) {
-          cmd[index++] = chr;
-        }
+                if (index < sizeof (cmd) - 1)
+                {
+                    cmd[index++] = chr;
+                }
             }
             else if (arg == 1)
             {
