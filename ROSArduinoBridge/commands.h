@@ -25,26 +25,29 @@
 // #define LEFT            0
 // #define RIGHT           1
 
-#define READ_ENCODERS     "e"
-#define READ_REVS         "rev"
-#define RESET_ENCODERS    "r"
-#define MOTOR_SPEEDS      "m"
-#define MOTOR_RAW_PWM     "o"
+#define READ_ENCODERS "e"
+#define READ_REVS "rev"
+#define RESET_ENCODERS "r"
+#define MOTOR_SPEEDS "m"
+#define MOTOR_RAW_PWM "o"
 #define SERVO_WRITE
 #define SERVO_READ
-#define STEPPER_CALIBRATE "stc"
-#define STEPPER_WRITE     "stw"
-#define UPDATE_PID        "u"
+#define UPDATE_PID "u"
 // #define LEFT              0
 // #define RIGHT             1
 
-#define REAR_RIGHT        0
-#define REAR_LEFT         1
-#define FRONT_LEFT        2
-#define FRONT_RIGHT       3
+#define REAR_RIGHT 0
+#define REAR_LEFT 1
+#define FRONT_LEFT 2
+#define FRONT_RIGHT 3
 
+/* STEPPER COMMANDS */
+#define STEPPER_CALIBRATE "stc"
 
+// stw <stepper_idx> <angle>
+#define STEPPER_WRITE "stw"
+
+// sta <stepper_1_angle> <stepper_2_angle>
+#define STEPPER_WRITE_ALL "sta"
 
 #endif
-
-
