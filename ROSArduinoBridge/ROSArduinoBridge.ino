@@ -209,7 +209,7 @@ runCommand ()
             Serial.println ("Invalid command");
         }
     }
-    else if (strcmp (cmd, STEPPER_WRITE_ALL))
+    else if (strcmp (cmd, STEPPER_WRITE_ALL) == 0)
     {
         Serial.println (arg1);
         Serial.println (arg2);
@@ -222,7 +222,7 @@ runCommand ()
         }
         else
         {
-            Serial.println ("Invalid command");
+            Serial.println ("Argument must not be empty");
         }
     }
 #ifdef USE_BASE
@@ -443,7 +443,6 @@ loop ()
             Serial.print (argv3);
             Serial.print (" | ");
             Serial.print (argv4);
-            Serial.print (" | ");
             runCommand ();
             resetCommand ();
         }

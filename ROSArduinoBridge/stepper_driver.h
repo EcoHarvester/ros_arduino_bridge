@@ -2,8 +2,6 @@
 #ifndef STEPPER_DRIVER_H
 #define STEPPER_DRIVER_H
 
-#include <cstdint>
-
 // Define stepper parameters
 #define STEPS_PER_REV 400 // 400 steps/rev full stepping
 #define DEG_PER_STEP (360.0 / STEPS_PER_REV)
