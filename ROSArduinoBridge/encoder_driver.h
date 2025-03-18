@@ -26,7 +26,7 @@
     #define FRONT_LEFT_ENC_PIN_A    PJ0       // digital pin 15
     #define FRONT_LEFT_ENC_PIN_B    PJ1       // digital pin 14
     #define FRONT_LEFT_ENC_PCINT      PCINT1
-    #define FRONT_LEFT_ENC_PCINT      PCINT1_vect
+    #define FRONT_LEFT_ENC_PCINT_VECT      PCINT1_vect
 
     #define FRONT_RIGHT_ENC_PIN_A   18
     #define FRONT_RIGHT_ENC_PIN_B   19  

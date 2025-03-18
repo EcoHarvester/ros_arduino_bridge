@@ -389,7 +389,8 @@ int runCommand() {
 /* Setup function--runs once at startup. */
 void setup() {
   Serial.begin(BAUDRATE);
-  delay(2000);
+  Serial.println("Setting things up");
+  delay(1000);
 
   // Initialize the motor controller if used */
   #ifdef USE_BASE
@@ -404,7 +405,7 @@ void setup() {
         DDRK &= ~(1<<REAR_LEFT_ENC_PIN_B);
         pinMode(FRONT_RIGHT_ENC_PIN_A, INPUT_PULLUP);
         pinMode(FRONT_RIGHT_ENC_PIN_B, INPUT_PULLUP);
-
+        
         //enable pull up resistors
         PORTB |= (1<<REAR_RIGHT_ENC_PIN_A);
         PORTB |= (1<<REAR_RIGHT_ENC_PIN_B);
@@ -412,14 +413,23 @@ void setup() {
         PORTJ |= (1<<FRONT_LEFT_ENC_PIN_B);
         PORTK |= (1<<REAR_LEFT_ENC_PIN_A);
         PORTK |= (1<<REAR_LEFT_ENC_PIN_B);
+
+        // NOTE:
+        // To use the PCINT pins on port J, we must
+        // disable the hardware UART TX3 and RX3 pins.
+        UCSR3B &= ~(_BV(TXEN3)); //disable UART TX
+        UCSR3B &= ~(_BV(RXEN3)); //disable UART RX
+        UCSR3B &= ~(_BV(TXCIE3)); //disable UART TX Interrupt
+        UCSR3B &= ~(_BV(RXCIE3)); //disable UART RX Interrupt
+
+        PCICR |= (1 << PCIE0);
+        PCICR |= (1 << PCIE1);
+        PCICR |= (1 << PCIE2);
         
         // tell pin change mask to listen to left encoder pins
         PCMSK0 |= (1 << REAR_RIGHT_ENC_PIN_A) | (1 << REAR_RIGHT_ENC_PIN_B);
         PCMSK1 |= (1 << FRONT_LEFT_ENC_PIN_A) | (1 << FRONT_LEFT_ENC_PIN_B);
         PCMSK2 |= (1 << REAR_LEFT_ENC_PIN_A) | (1 << REAR_LEFT_ENC_PIN_B);
-      
-        // enable interrupt in the general interrupt mask
-        PCICR |= (1 << PCIE0) | (1 << PCIE1) | (1 << PCIE2);
       #elif defined ARDUINO_UNO_R3
         //set as inputs
         DDRB &= ~(1<<LEFT_ENC_PIN_A);
@@ -482,13 +492,13 @@ void loop() {
       else if (arg == 4) argv4[index] = '\0';
       Serial.print(cmd);
       Serial.print(" | ");
-      Serial.print(arg1);
+      Serial.print(argv1);
       Serial.print(" | ");
-      Serial.print(arg2);
+      Serial.print(argv2);
       Serial.print(" | ");
-      Serial.print(arg3);
+      Serial.print(argv3);
       Serial.print(" | ");
-      Serial.print(arg4);
+      Serial.print(argv4);
       Serial.print(" | ");
       runCommand();
       resetCommand();
@@ -525,7 +535,9 @@ void loop() {
       if (arg == 0) {
         // The first arg is the single-letter command
         // cmdv = chr;
-        if (index < sizeof(cmd)-1) cmd[index++] = chr;
+        if (index < sizeof(cmd)-1) {
+          cmd[index++] = chr;
+        }
       }
       else if (arg == 1) {
         // Subsequent arguments can be more than one character

@@ -47,6 +47,7 @@
       enc_last <<=2; //shift previous state two places
       // enc_last |= PINB & 0x03; //read the current state into lowest 2 bits
       enc_last |= PINB & ((1 << REAR_RIGHT_ENC_PIN_A) | (1 << REAR_RIGHT_ENC_PIN_B));
+      
       rear_right_enc_pos += ENC_STATES[(enc_last & 0x0f)];
     }
     
