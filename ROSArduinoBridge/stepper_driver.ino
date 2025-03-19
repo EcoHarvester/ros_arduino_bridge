@@ -119,7 +119,7 @@ void
 setStepperPosition (uint8_t stepper_num, float degrees)
 {
     // Function to update the target position and direction of the steppers before actuation
-    Serial.println ("Setting position");
+    // Serial.println ("Setting position");
     if (stepper_num >= MAX_STEPPERS)
     {
         return;
@@ -135,7 +135,7 @@ setStepperPosition (uint8_t stepper_num, float degrees)
     digitalWrite (steppers[stepper_num].dir_pin, direction);
 
     steppers[stepper_num].state = MOVING;
-    Serial.println (steppers[stepper_num].target_pos);
+    // Serial.println (steppers[stepper_num].target_pos);
     // Serial.println(steppers[stepper_num].state);
 }
 
@@ -175,9 +175,9 @@ updateSteppers ()
             }
         }
     }
-    Serial.println ("Finished stepper motions");
+    // Serial.println ("Finished stepper motions");
     // Serial.println(steppers[0].current_pos);
     // Serial.println(steppers[1].current_pos);
-    Serial.println (count[0]);
-    Serial.println (count[1]);
+    // Serial.println (count[0]);
+    // Serial.println (count[1]);
 }

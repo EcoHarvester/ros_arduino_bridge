@@ -225,98 +225,99 @@ runCommand ()
             Serial.println ("Argument must not be empty");
         }
     }
-#ifdef USE_BASE
-    else if (strcmp (cmd, READ_ENCODERS) == 0)
-    {
-        Serial.print (readEncoder (REAR_RIGHT));
-        Serial.print (" ");
-        Serial.print (readEncoder (REAR_LEFT));
-        Serial.print (" ");
-        Serial.print (readEncoder (FRONT_LEFT));
-        Serial.print (" ");
-        Serial.println (readEncoder (FRONT_RIGHT));
-    }
-    else if (strcmp (cmd, READ_REVS) == 0)
-    {
-        Serial.print (readEncoder (REAR_RIGHT) / CPR);
-        Serial.print (" ");
-        Serial.print (readEncoder (REAR_LEFT) / CPR);
-        Serial.print (" ");
-        Serial.print (readEncoder (FRONT_LEFT) / CPR);
-        Serial.print (" ");
-        Serial.println (readEncoder (FRONT_RIGHT) / CPR);
-    }
-    else if (strcmp (cmd, RESET_ENCODERS) == 0)
-    {
-        resetEncoders ();
-        resetPID ();
-        Serial.println ("OK");
-    }
-    else if (strcmp (cmd, MOTOR_SPEEDS) == 0)
-    {
+  #ifdef USE_BASE
+      else if (strcmp (cmd, READ_ENCODERS) == 0)
+      {
+          Serial.print (readEncoder (REAR_RIGHT));
+          Serial.print (" ");
+          Serial.print (readEncoder (REAR_LEFT));
+          Serial.print (" ");
+          Serial.print (readEncoder (FRONT_LEFT));
+          Serial.print (" ");
+          Serial.println (readEncoder (FRONT_RIGHT));
+      }
+      else if (strcmp (cmd, READ_REVS) == 0)
+      {
+          Serial.print (readEncoder (REAR_RIGHT) / CPR);
+          Serial.print (" ");
+          Serial.print (readEncoder (REAR_LEFT) / CPR);
+          Serial.print (" ");
+          Serial.print (readEncoder (FRONT_LEFT) / CPR);
+          Serial.print (" ");
+          Serial.println (readEncoder (FRONT_RIGHT) / CPR);
+      }
+      else if (strcmp (cmd, RESET_ENCODERS) == 0)
+      {
+          resetEncoders ();
+          resetPID ();
+          Serial.println ("OK");
+      }
+      else if (strcmp (cmd, MOTOR_SPEEDS) == 0)
+      {
         /* Reset the auto stop timer */
         lastMotorCommand = millis ();
-#ifdef TWO_MOTORS
-        if (arg1 == 0 && arg2 == 0)
-        {
-            setMotorSpeeds (0, 0);
-            resetPID ();
-            moving = 0;
-        }
-        else
-        {
-            moving = 1;
-        }
-        // Using rearLeftPID for left side in two-motor case
-        rearLeftPID.TargetTicksPerFrame = arg1;
-        // using rearRightPID for the right side in two-motor case
-        rearRightPID.TargetTicksPerFrame = arg2;
-        Serial.println ("OK");
-#elif define FOUR_MOTORS
-        if (arg1 == 0 && arg2 == 0 && arg3 == 0 && arg4 == 0)
-        {
-            setMotorSpeeds (0, 0, 0, 0);
-            resetPID ();
-            moving = 0;
-        }
-        else
-        {
-            moving = 1;
-        }
-        frontLeftPID.TargetTicksPerFrame = arg1;
-        frontRightPID.TargetTicksPerFrame = arg2;
-        rearLeftPID.TargetTicksPerFrame = arg1;
-        rearRightPID.TargetTicksPerFrame = arg2;
-        Serial.println ("OK");
-#endif
-    }
-    else if (strcmp (cmd, MOTOR_RAW_PWM) == 0)
-    {
-        /* Reset the auto stop timer */
-        lastMotorCommand = millis ();
-        resetPID ();
-        moving = 0; // Sneaky way to temporarily disable the PID
-#ifdef TWO_MOTORS
-        setMotorSpeeds (arg1, arg2);
-#elif define FOUR_MOTORS
-        setMotorSpeeds (arg1, arg2, arg3, arg4)
-#endif
-        Serial.println ("OK");
-    }
-    else if (strcmp (cmd, UPDATE_PID) == 0)
-    {
-        while ((str = strtok_r (p, ":", &p)) != '\0')
-        {
-            pid_args[i] = atoi (str);
-            i++;
-        }
-        Kp = pid_args[0];
-        Kd = pid_args[1];
-        Ki = pid_args[2];
-        Ko = pid_args[3];
-        Serial.println ("OK");
-    }
-#endif
+        #ifdef TWO_MOTORS
+            if (arg1 == 0 && arg2 == 0)
+            {
+                setMotorSpeeds (0, 0);
+                resetPID ();
+                moving = 0;
+            }
+            else
+            {
+                moving = 1;
+            }
+            // Using rearLeftPID for left side in two-motor case
+            rearLeftPID.TargetTicksPerFrame = arg1;
+            // using rearRightPID for the right side in two-motor case
+            rearRightPID.TargetTicksPerFrame = arg2;
+            Serial.println ("OK");
+        #elif define FOUR_MOTORS
+            if (arg1 == 0 && arg2 == 0 && arg3 == 0 && arg4 == 0)
+            {
+                setMotorSpeeds (0, 0, 0, 0);
+                resetPID ();
+                moving = 0;
+            }
+            else
+            {
+                moving = 1;
+            }
+            frontLeftPID.TargetTicksPerFrame = arg1;
+            frontRightPID.TargetTicksPerFrame = arg2;
+            rearLeftPID.TargetTicksPerFrame = arg1;
+            rearRightPID.TargetTicksPerFrame = arg2;
+            Serial.println ("OK");
+        #endif
+      }
+      else if (strcmp (cmd, MOTOR_RAW_PWM) == 0)
+      {
+          /* Reset the auto stop timer */
+          lastMotorCommand = millis ();
+          resetPID ();
+          moving = 0; // Sneaky way to temporarily disable the PID
+
+          #ifdef TWO_MOTORS
+              setMotorSpeeds (arg1, arg2);
+          #elif define FOUR_MOTORS
+              setMotorSpeeds (arg1, arg2, arg3, arg4)
+          #endif
+              Serial.println ("OK");
+      }
+      else if (strcmp (cmd, UPDATE_PID) == 0)
+      {
+          while ((str = strtok_r (p, ":", &p)) != '\0')
+          {
+              pid_args[i] = atoi (str);
+              i++;
+          }
+          Kp = pid_args[0];
+          Kd = pid_args[1];
+          Ki = pid_args[2];
+          Ko = pid_args[3];
+          Serial.println ("OK");
+      }
+  #endif
     else
     {
         Serial.println ("Invalid command");
