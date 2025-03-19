@@ -228,13 +228,13 @@ runCommand ()
   #ifdef USE_BASE
       else if (strcmp (cmd, READ_ENCODERS) == 0)
       {
-          Serial.print (readEncoder (REAR_RIGHT));
-          Serial.print (" ");
-          Serial.print (readEncoder (REAR_LEFT));
-          Serial.print (" ");
           Serial.print (readEncoder (FRONT_LEFT));
           Serial.print (" ");
           Serial.println (readEncoder (FRONT_RIGHT));
+          Serial.print (" ");
+          Serial.print (readEncoder (REAR_LEFT));
+          Serial.print (" ");
+          Serial.print (readEncoder (REAR_RIGHT));
       }
       else if (strcmp (cmd, READ_REVS) == 0)
       {
@@ -334,63 +334,67 @@ setup ()
 
 // Initialize the motor controller if used */
 #if defined(USE_BASE) && defined(ARDUINO_ENC_COUNTER)
-#if defined(ARDUINO_MEGA_2560)
-    // set as inputs
-    DDRB &= ~(1 << REAR_RIGHT_ENC_PIN_A);
-    DDRB &= ~(1 << REAR_RIGHT_ENC_PIN_B);
-    DDRJ &= ~(1 << FRONT_LEFT_ENC_PIN_A);
-    DDRJ &= ~(1 << FRONT_LEFT_ENC_PIN_B);
-    DDRK &= ~(1 << REAR_LEFT_ENC_PIN_A);
-    DDRK &= ~(1 << REAR_LEFT_ENC_PIN_B);
-    pinMode (FRONT_RIGHT_ENC_PIN_A, INPUT_PULLUP);
-    pinMode (FRONT_RIGHT_ENC_PIN_B, INPUT_PULLUP);
+    #if defined(ARDUINO_MEGA_2560)
+        // set as inputs
+        DDRB &= ~(1 << REAR_RIGHT_ENC_PIN_A);
+        DDRB &= ~(1 << REAR_RIGHT_ENC_PIN_B);
+        DDRJ &= ~(1 << FRONT_LEFT_ENC_PIN_A);
+        DDRJ &= ~(1 << FRONT_LEFT_ENC_PIN_B);
+        DDRK &= ~(1 << REAR_LEFT_ENC_PIN_A);
+        DDRK &= ~(1 << REAR_LEFT_ENC_PIN_B);
+        pinMode (FRONT_RIGHT_ENC_PIN_A, INPUT_PULLUP);
+        pinMode (FRONT_RIGHT_ENC_PIN_B, INPUT_PULLUP);
 
-    // enable pull up resistors
-    PORTB |= (1 << REAR_RIGHT_ENC_PIN_A);
-    PORTB |= (1 << REAR_RIGHT_ENC_PIN_B);
-    PORTJ |= (1 << FRONT_LEFT_ENC_PIN_A);
-    PORTJ |= (1 << FRONT_LEFT_ENC_PIN_B);
-    PORTK |= (1 << REAR_LEFT_ENC_PIN_A);
-    PORTK |= (1 << REAR_LEFT_ENC_PIN_B);
+        // enable pull up resistors
+        PORTB |= (1 << REAR_RIGHT_ENC_PIN_A);
+        PORTB |= (1 << REAR_RIGHT_ENC_PIN_B);
+        PORTJ |= (1 << FRONT_LEFT_ENC_PIN_A);
+        PORTJ |= (1 << FRONT_LEFT_ENC_PIN_B);
+        PORTK |= (1 << REAR_LEFT_ENC_PIN_A);
+        PORTK |= (1 << REAR_LEFT_ENC_PIN_B);
 
-    // NOTE:
-    // To use the PCINT pins on port J, we must
-    // disable the hardware UART TX3 and RX3 pins.
-    UCSR3B &= ~(_BV (TXEN3));  // disable UART TX
-    UCSR3B &= ~(_BV (RXEN3));  // disable UART RX
-    UCSR3B &= ~(_BV (TXCIE3)); // disable UART TX Interrupt
-    UCSR3B &= ~(_BV (RXCIE3)); // disable UART RX Interrupt
+        // // NOTE:
+        // To use the PCINT pins on port J, we must
+        // disable the hardware UART TX3 and RX3 pins.
+        UCSR3B &= ~(_BV (TXEN3));  // disable UART TX
+        UCSR3B &= ~(_BV (RXEN3));  // disable UART RX
+        UCSR3B &= ~(_BV (TXCIE3)); // disable UART TX Interrupt
+        UCSR3B &= ~(_BV (RXCIE3)); // disable UART RX Interrupt
 
-    PCICR |= (1 << PCIE0);
-    PCICR |= (1 << PCIE1);
-    PCICR |= (1 << PCIE2);
+        PCICR |= (1 << PCIE0);
+        PCICR |= (1 << PCIE1);
+        PCICR |= (1 << PCIE2);
 
-    // tell pin change mask to listen to left encoder pins
-    PCMSK0 |= (1 << REAR_RIGHT_ENC_PIN_A) | (1 << REAR_RIGHT_ENC_PIN_B);
-    PCMSK1 |= (1 << FRONT_LEFT_ENC_PIN_A) | (1 << FRONT_LEFT_ENC_PIN_B);
-    PCMSK2 |= (1 << REAR_LEFT_ENC_PIN_A) | (1 << REAR_LEFT_ENC_PIN_B);
-#elif defined ARDUINO_UNO_R3
-    // set as inputs
-    DDRB &= ~(1 << LEFT_ENC_PIN_A);
-    DDRB &= ~(1 << LEFT_ENC_PIN_B);
-    DDRD &= ~(1 << RIGHT_ENC_PIN_A);
-    DDRD &= ~(1 << RIGHT_ENC_PIN_B);
+        // tell pin change mask to listen to left encoder pins
+        PCMSK0 |= (1 << REAR_RIGHT_ENC_PIN_A_PCINT) | (1 << REAR_RIGHT_ENC_PIN_B_PCINT);
+        PCMSK1 |= (1 << FRONT_LEFT_ENC_PIN_A_PCINT) | (1 << FRONT_LEFT_ENC_PIN_B_PCINT);
+        PCMSK2 |= (1 << REAR_LEFT_ENC_PIN_A_PCINT) | (1 << REAR_LEFT_ENC_PIN_B_PCINT);
 
-    // enable pull up resistors
-    PORTB |= (1 << LEFT_ENC_PIN_A);
-    PORTB |= (1 << LEFT_ENC_PIN_B);
-    PORTD |= (1 << RIGHT_ENC_PIN_A);
-    PORTD |= (1 << RIGHT_ENC_PIN_B);
+        // Attach interrupts on the external interrupt pins
+        attachInterrupt(digitalPinToInterrupt(FRONT_RIGHT_ENC_PIN_A),frontRightEncA,CHANGE);
+        attachInterrupt(digitalPinToInterrupt(FRONT_RIGHT_ENC_PIN_B),frontRightEncB,CHANGE);
+    #elif defined ARDUINO_UNO_R3
+        // set as inputs
+        DDRB &= ~(1 << LEFT_ENC_PIN_A);
+        DDRB &= ~(1 << LEFT_ENC_PIN_B);
+        DDRD &= ~(1 << RIGHT_ENC_PIN_A);
+        DDRD &= ~(1 << RIGHT_ENC_PIN_B);
 
-    // tell pin change mask to listen to left encoder pins
-    PCMSK0 |= (1 << LEFT_ENC_PIN_A) | (1 << LEFT_ENC_PIN_B);
-    // tell pin change mask to listen to right encoder pins
-    PCMSK2 |= (1 << RIGHT_ENC_PIN_A) | (1 << RIGHT_ENC_PIN_B);
+        // enable pull up resistors
+        PORTB |= (1 << LEFT_ENC_PIN_A);
+        PORTB |= (1 << LEFT_ENC_PIN_B);
+        PORTD |= (1 << RIGHT_ENC_PIN_A);
+        PORTD |= (1 << RIGHT_ENC_PIN_B);
 
-    // enable interrupt in the general interrupt mask
-    PCICR |= (1 << PCIE0) | (1 << PCIE2);
+        // tell pin change mask to listen to left encoder pins
+        PCMSK0 |= (1 << LEFT_ENC_PIN_A) | (1 << LEFT_ENC_PIN_B);
+        // tell pin change mask to listen to right encoder pins
+        PCMSK2 |= (1 << RIGHT_ENC_PIN_A) | (1 << RIGHT_ENC_PIN_B);
+
+        // enable interrupt in the general interrupt mask
+        PCICR |= (1 << PCIE0) | (1 << PCIE2);
 #endif
-    initSteppers ();
+    // initSteppers ();
     initMotorController ();
     resetPID ();
 #endif
