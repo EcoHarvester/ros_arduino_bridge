@@ -230,11 +230,11 @@ runCommand ()
       {
           Serial.print (readEncoder (FRONT_LEFT));
           Serial.print (" ");
-          Serial.println (readEncoder (FRONT_RIGHT));
+          Serial.print (readEncoder (FRONT_RIGHT));
           Serial.print (" ");
           Serial.print (readEncoder (REAR_LEFT));
           Serial.print (" ");
-          Serial.print (readEncoder (REAR_RIGHT));
+          Serial.println (readEncoder (REAR_RIGHT));
       }
       else if (strcmp (cmd, READ_REVS) == 0)
       {
@@ -439,15 +439,15 @@ loop ()
                 argv3[index] = '\0';
             else if (arg == 4)
                 argv4[index] = '\0';
-            Serial.print (cmd);
-            Serial.print (" | ");
-            Serial.print (argv1);
-            Serial.print (" | ");
-            Serial.print (argv2);
-            Serial.print (" | ");
-            Serial.print (argv3);
-            Serial.print (" | ");
-            Serial.print (argv4);
+            // Serial.print (cmd);
+            // Serial.print (" | ");
+            // Serial.print (argv1);
+            // Serial.print (" | ");
+            // Serial.print (argv2);
+            // Serial.print (" | ");
+            // Serial.print (argv3);
+            // Serial.print (" | ");
+            // Serial.print (argv4);
             runCommand ();
             resetCommand ();
         }
